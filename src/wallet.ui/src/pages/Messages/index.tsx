@@ -7,6 +7,7 @@ import { messageService } from '../../services/messageService';
 import { IMessage, IMessageCreate } from '../../types/message';
 import MessageItem from './MessageItem';
 import NewMessageForm from './NewMessageForm';
+import MessageThread from './MessageThread';
 
 const { TabPane } = Tabs;
 
@@ -59,6 +60,30 @@ const Messages = () => {
 
   const handleStatusChange = () => {
     fetchMessages();
+  };
+
+  const organizeMessages = (messages: IMessage[]): IMessage[] => {
+    const messageMap = new Map<string, IMessage>();
+    
+    // Tüm mesajları map'e ekle
+    messages.forEach(msg => {
+      messageMap.set(msg.id, { ...msg, replies: [] });
+    });
+
+    // Yanıtları parent mesajlara ekle
+    messages.forEach(msg => {
+      if (msg.parentMessageId) {
+        const parent = messageMap.get(msg.parentMessageId);
+        if (parent && parent.replies) {
+          parent.replies.push(messageMap.get(msg.id)!);
+        }
+      }
+    });
+
+    // Sadece parent mesajları döndür
+    return Array.from(messageMap.values())
+      .filter(msg => !msg.parentMessageId)
+      .sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
   };
 
   return (
@@ -116,10 +141,10 @@ const Messages = () => {
                 <List
                   loading={loading}
                   itemLayout="horizontal"
-                  dataSource={messages}
+                  dataSource={organizeMessages(messages)}
                   renderItem={(item) => (
-                    <MessageItem 
-                      message={item} 
+                    <MessageThread
+                      message={item}
                       onReply={fetchMessages}
                       onStatusChange={handleStatusChange}
                       currentUserId={user?.id}
@@ -142,10 +167,10 @@ const Messages = () => {
                 <List
                   loading={loading}
                   itemLayout="horizontal"
-                  dataSource={messages}
+                  dataSource={organizeMessages(messages)}
                   renderItem={(item) => (
-                    <MessageItem 
-                      message={item} 
+                    <MessageThread
+                      message={item}
                       onReply={fetchMessages}
                       onStatusChange={handleStatusChange}
                       currentUserId={user?.id}
@@ -168,10 +193,10 @@ const Messages = () => {
                 <List
                   loading={loading}
                   itemLayout="horizontal"
-                  dataSource={messages}
+                  dataSource={organizeMessages(messages)}
                   renderItem={(item) => (
-                    <MessageItem 
-                      message={item} 
+                    <MessageThread
+                      message={item}
                       onReply={fetchMessages}
                       onStatusChange={handleStatusChange}
                       currentUserId={user?.id}

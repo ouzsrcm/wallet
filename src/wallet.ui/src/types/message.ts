@@ -1,6 +1,7 @@
 export interface IMessage {
   id: string;
   senderId: string;
+  senderUsername: string;
   senderFullName: string;
   receiverId: string;
   receiverFullName: string;

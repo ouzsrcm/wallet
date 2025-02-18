@@ -16,6 +16,11 @@ public class MessageDto
     public Guid SenderId { get; set; }
 
     /// <summary>
+    /// Gönderen kullanıcının kullanıcı adı
+    /// </summary>
+    public string SenderUsername { get; set; } = null!;
+
+    /// <summary>
     /// Gönderen kullanıcının tam adı
     /// </summary>
     public string SenderFullName { get; set; } = null!;

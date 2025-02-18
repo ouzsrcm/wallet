@@ -140,6 +140,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
           onFinish={handleReply}
           onCancel={() => setReplyModalVisible(false)}
           initialSubject={`Re: ${message.subject}`}
+          initialReceiver={{
+            username: message.senderUsername,
+            fullName: message.senderFullName
+          }}
+          isReply={true}
         />
       </Modal>
     </List.Item>

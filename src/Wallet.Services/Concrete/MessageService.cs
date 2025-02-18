@@ -47,12 +47,15 @@ public class MessageService : IMessageService
                 on msg.SenderId equals sender.Id
             join receiver in _unitOfWork.Users.GetAll() 
                 on msg.ReceiverId equals receiver.Id
+            join senderCred in _unitOfWork.UserCredentials.GetAll()
+                on sender.Id equals senderCred.UserId
             where msg.Id == messageId && 
                   (msg.SenderId == userId || msg.ReceiverId == userId)
             select new MessageDto
             {
                 Id = msg.Id,
                 SenderId = msg.SenderId,
+                SenderUsername = senderCred.Username,
                 SenderFullName = sender.Person.FirstName + " " + sender.Person.LastName,
                 ReceiverId = msg.ReceiverId,
                 ReceiverFullName = receiver.Person.FirstName + " " + receiver.Person.LastName,
@@ -80,12 +83,15 @@ public class MessageService : IMessageService
                 on message.SenderId equals sender.Id
             join receiver in _unitOfWork.Users.GetAll() 
                 on message.ReceiverId equals receiver.Id
+            join senderCred in _unitOfWork.UserCredentials.GetAll()
+                on sender.Id equals senderCred.UserId
             where message.ReceiverId == userId && !message.IsDeleted
             orderby message.CreatedDate descending
             select new MessageDto
             {
                 Id = message.Id,
                 SenderId = message.SenderId,
+                SenderUsername = senderCred.Username,
                 SenderFullName = sender.Person.FirstName + " " + sender.Person.LastName,
                 ReceiverId = message.ReceiverId,
                 ReceiverFullName = receiver.Person.FirstName + " " + receiver.Person.LastName,
@@ -105,12 +111,15 @@ public class MessageService : IMessageService
                 on message.SenderId equals sender.Id
             join receiver in _unitOfWork.Users.GetAll() 
                 on message.ReceiverId equals receiver.Id
+            join senderCred in _unitOfWork.UserCredentials.GetAll()
+                on sender.Id equals senderCred.UserId
             where message.SenderId == userId && !message.IsDeleted
             orderby message.CreatedDate descending
             select new MessageDto
             {
                 Id = message.Id,
                 SenderId = message.SenderId,
+                SenderUsername = senderCred.Username,
                 SenderFullName = sender.Person.FirstName + " " + sender.Person.LastName,
                 ReceiverId = message.ReceiverId,
                 ReceiverFullName = receiver.Person.FirstName + " " + receiver.Person.LastName,

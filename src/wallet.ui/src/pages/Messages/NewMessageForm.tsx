@@ -11,58 +11,85 @@ interface NewMessageFormProps {
   onFinish: (values: any) => void;
   onCancel: () => void;
   initialSubject?: string;
+  initialReceiver?: {
+    username: string;
+    fullName: string;
+  };
+  isReply?: boolean;
 }
 
 const NewMessageForm: React.FC<NewMessageFormProps> = ({
   form,
   onFinish,
   onCancel,
-  initialSubject = ''
+  initialSubject = '',
+  initialReceiver,
+  isReply = false
 }) => {
   const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await messageService.getUsers();
-        setUsers(response);
-      } catch (error) {
-        console.error('Failed to fetch users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!isReply) {
+      fetchUsers();
+    }
+  }, [isReply]);
 
-    fetchUsers();
-  }, []);
+  useEffect(() => {
+    if (initialReceiver) {
+      form.setFieldsValue({
+        receiverUsername: initialReceiver.username
+      });
+    }
+  }, [initialReceiver, form]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await messageService.getUsers();
+      setUsers(response);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Form
       form={form}
       layout="vertical"
       onFinish={onFinish}
-      initialValues={{ subject: initialSubject }}
+      initialValues={{ 
+        subject: initialSubject,
+        receiverUsername: initialReceiver?.username
+      }}
     >
       <Form.Item
         name="receiverUsername"
         label="To"
         rules={[{ required: true, message: 'Please select a recipient' }]}
       >
-        <Select
-          showSearch
-          placeholder="Select a recipient"
-          loading={loading}
-          optionFilterProp="children"
-          filterOption={(input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-          }
-          options={users.map(user => ({
-            value: user.username,
-            label: `${user.fullName} (${user.username})`
-          }))}
-        />
+        {isReply ? (
+          <Input 
+            disabled 
+            value={`${initialReceiver?.fullName} (${initialReceiver?.username})`}
+          />
+        ) : (
+          <Select
+            showSearch
+            placeholder="Select a recipient"
+            loading={loading}
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={users.map(user => ({
+              value: user.username,
+              label: `${user.fullName} (${user.username})`
+            }))}
+          />
+        )}
       </Form.Item>
 
       <Form.Item
