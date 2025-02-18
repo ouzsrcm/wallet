@@ -1,36 +1,65 @@
-import React from 'react';
-import { Layout, Menu } from 'antd';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { DashboardOutlined, TransactionOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { menuItems, MenuItem } from '../../config/menuItems';
+import { RootState } from '../../store';
+import { logout } from '../../store/slices/authSlice';
+import { authService } from '../../services/authService';
 
 const { Header, Content, Footer, Sider } = Layout;
 
 const MainLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  const menuItems = [
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      dispatch(logout());
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const userMenuItems = [
     {
-      key: '/',
-      icon: <DashboardOutlined />,
-      label: <Link to="/">Dashboard</Link>,
-    },
-    {
-      key: '/transactions',
-      icon: <TransactionOutlined />,
-      label: <Link to="/transactions">Transactions</Link>,
-    },
-    {
-      key: '/profile',
+      key: 'profile',
       icon: <UserOutlined />,
-      label: <Link to="/profile">Profile</Link>,
+      label: 'Profile',
+      onClick: () => navigate('/profile'),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout,
     },
   ];
 
   return (
     <Layout className="min-h-screen">
-      <Header className="bg-white border-b">
-        <div className="container mx-auto">
-          <h1 className="text-2xl">Wallet App</h1>
+      <Header className="bg-white border-b px-6">
+        <div className="flex justify-between items-center h-full">
+          <h1 className="text-2xl m-0">Wallet App</h1>
+          
+          <Dropdown menu={{ items: userMenuItems as MenuItem[] }} trigger={['click']}>
+            <Space className="cursor-pointer">
+              <Avatar 
+                icon={<UserOutlined />} 
+                className="bg-primary"
+              />
+              <span className="text-base">
+                {user?.firstName} {user?.lastName}
+              </span>
+            </Space>
+          </Dropdown>
         </div>
       </Header>
       <Layout>

@@ -17,6 +17,9 @@ public class PersonUnitOfWork : UnitOfWork, IPersonUnitOfWork
     private readonly IBaseRepository<User> _users;
     private readonly IBaseRepository<UserCredential> _userCredentials;
 
+    // Mesaj repository'si
+    private readonly IBaseRepository<Message> _messages;
+
     public PersonUnitOfWork(WalletDbContext context) : base(context)
     {
         // Repository'leri initialize et
@@ -27,6 +30,7 @@ public class PersonUnitOfWork : UnitOfWork, IPersonUnitOfWork
         
         _users = GetRepository<User>();
         _userCredentials = GetRepository<UserCredential>();
+        _messages = GetRepository<Message>();
     }
 
     // Person ve ilişkili property'ler
@@ -38,4 +42,7 @@ public class PersonUnitOfWork : UnitOfWork, IPersonUnitOfWork
     // User ve ilişkili property'ler
     public IBaseRepository<User> Users => _users;
     public IBaseRepository<UserCredential> UserCredentials => _userCredentials;
+
+    // Mesaj repository'si
+    public IBaseRepository<Message> Messages => _messages;
 } 

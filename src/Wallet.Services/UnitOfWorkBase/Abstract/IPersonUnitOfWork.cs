@@ -14,4 +14,7 @@ public interface IPersonUnitOfWork : IUnitOfWork
     // User ve ilişkili entity'ler
     IBaseRepository<User> Users { get; }
     IBaseRepository<UserCredential> UserCredentials { get; }
+
+    // Mesajlar
+    IBaseRepository<Message> Messages { get; }
 } 
