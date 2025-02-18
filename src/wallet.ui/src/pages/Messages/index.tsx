@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, List, Button, Modal, Form, Input, Select, message } from 'antd';
+import { Card, List, Button, Modal, Form, Input, Select, message, Tabs } from 'antd';
+import { MailFilled, InboxOutlined, SendOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { messageService } from '../../services/messageService';
@@ -7,23 +8,35 @@ import { IMessage, IMessageCreate } from '../../types/message';
 import MessageItem from './MessageItem';
 import NewMessageForm from './NewMessageForm';
 
-const { TextArea } = Input;
+const { TabPane } = Tabs;
 
 const Messages = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState('inbox');
   const { user } = useSelector((state: RootState) => state.auth);
   const [form] = Form.useForm();
 
   useEffect(() => {
     fetchMessages();
-  }, []);
+  }, [activeTab]);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await messageService.getMessages();
+      let response;
+      switch (activeTab) {
+        case 'sent':
+          response = await messageService.getSentMessages();
+          break;
+        case 'trash':
+          // TODO: Implement trash messages endpoint
+          response = [];
+          break;
+        default: // inbox
+          response = await messageService.getMessages();
+      }
       setMessages(response);
     } catch (error) {
       message.error('Failed to fetch messages');
@@ -44,29 +57,132 @@ const Messages = () => {
     }
   };
 
+  const handleStatusChange = () => {
+    fetchMessages();
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Messages</h2>
-        <Button type="primary" onClick={() => setIsModalVisible(true)}>
-          New Message
+        <Button 
+          type="primary"
+          onClick={() => setIsModalVisible(true)}
+          className="
+            h-10
+            bg-purple-600 
+            hover:bg-purple-700 
+            transition-all 
+            duration-300 
+            transform 
+            hover:scale-105 
+            shadow-md 
+            hover:shadow-xl
+            border-none
+          "
+          style={{ 
+            background: 'linear-gradient(145deg, #9333EA, #7C3AED)',
+            borderColor: 'transparent'
+          }}
+        >
+          <span className="flex items-center gap-2">
+            <MailFilled className="text-white" />
+            New Message
+          </span>
         </Button>
       </div>
 
-      <Card>
-        <List
-          loading={loading}
-          itemLayout="horizontal"
-          dataSource={messages}
-          renderItem={(item) => (
-            <MessageItem 
-              message={item} 
-              onReply={fetchMessages}
-              currentUserId={user?.id}
-            />
-          )}
-        />
-      </Card>
+      <Tabs 
+        activeKey={activeTab} 
+        onChange={setActiveTab}
+        className="message-tabs bg-sky-50 p-3 rounded-lg shadow-sm"
+        tabBarStyle={{
+          marginBottom: 16,
+          padding: '8px 16px',
+          borderRadius: '8px',
+          backgroundColor: '#f0f9ff',
+        }}
+        items={[
+          {
+            key: 'inbox',
+            label: (
+              <span className="flex items-center gap-2 px-3 py-1">
+                <InboxOutlined />
+                Inbox
+              </span>
+            ),
+            children: (
+              <Card>
+                <List
+                  loading={loading}
+                  itemLayout="horizontal"
+                  dataSource={messages}
+                  renderItem={(item) => (
+                    <MessageItem 
+                      message={item} 
+                      onReply={fetchMessages}
+                      onStatusChange={handleStatusChange}
+                      currentUserId={user?.id}
+                    />
+                  )}
+                />
+              </Card>
+            )
+          },
+          {
+            key: 'sent',
+            label: (
+              <span className="flex items-center gap-2 px-3 py-1">
+                <SendOutlined />
+                Sent
+              </span>
+            ),
+            children: (
+              <Card>
+                <List
+                  loading={loading}
+                  itemLayout="horizontal"
+                  dataSource={messages}
+                  renderItem={(item) => (
+                    <MessageItem 
+                      message={item} 
+                      onReply={fetchMessages}
+                      onStatusChange={handleStatusChange}
+                      currentUserId={user?.id}
+                    />
+                  )}
+                />
+              </Card>
+            )
+          },
+          {
+            key: 'trash',
+            label: (
+              <span className="flex items-center gap-2 px-3 py-1">
+                <DeleteOutlined />
+                Recycle Bin
+              </span>
+            ),
+            children: (
+              <Card>
+                <List
+                  loading={loading}
+                  itemLayout="horizontal"
+                  dataSource={messages}
+                  renderItem={(item) => (
+                    <MessageItem 
+                      message={item} 
+                      onReply={fetchMessages}
+                      onStatusChange={handleStatusChange}
+                      currentUserId={user?.id}
+                    />
+                  )}
+                />
+              </Card>
+            )
+          }
+        ]}
+      />
 
       <Modal
         title="New Message"

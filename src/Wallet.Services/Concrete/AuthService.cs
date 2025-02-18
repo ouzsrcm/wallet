@@ -8,6 +8,7 @@ using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Auth;
 using Wallet.Services.UnitOfWorkBase.Abstract;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace Wallet.Services.Concrete;
 
@@ -279,5 +280,23 @@ public class AuthService : IAuthService
 
         // Başarılı
         return true;
+    }
+
+    public async Task<UserInfoDto> GetUserInfoAsync(Guid userId)
+    {
+        return await (from user in _unitOfWork.Users.GetAll()
+            join person in _unitOfWork.Persons.GetAll()
+                on user.PersonId equals person.Id
+            join credential in _unitOfWork.UserCredentials.GetAll()
+                on user.Id equals credential.UserId
+            where user.Id == userId
+            select new UserInfoDto
+            {
+                Id = user.Id,
+                Username = credential.Username,
+                FirstName = person.FirstName,
+                LastName = person.LastName
+            }).FirstOrDefaultAsync() 
+            ?? throw new Exception("User not found");
     }
 } 

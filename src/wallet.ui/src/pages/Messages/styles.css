@@ -1,0 +1,26 @@
+.message-tabs .ant-tabs-nav::before {
+  border: none;
+}
+
+.message-tabs .ant-tabs-tab {
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  margin: 0 4px;
+}
+
+.message-tabs .ant-tabs-tab:hover {
+  background-color: #e0f2fe;  /* sky-100 */
+}
+
+.message-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  background-color: #bae6fd;  /* sky-200 */
+}
+
+.message-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #0369a1;  /* sky-700 */
+  font-weight: 500;
+}
+
+.message-tabs .ant-tabs-ink-bar {
+  display: none;
+} 

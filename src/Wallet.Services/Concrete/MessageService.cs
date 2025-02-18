@@ -3,6 +3,7 @@ using Wallet.Entities.EntityObjects;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Messages;
 using Wallet.Services.UnitOfWorkBase.Abstract;
+using Wallet.Services.DTOs.Auth;
 
 namespace Wallet.Services.Concrete;
 
@@ -211,5 +212,23 @@ public class MessageService : IMessageService
         }
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+//TODO: bu kisim LINQ kullanilarak yeniden yazilabilir.
+    public async Task<List<UserInfoDto>> GetAllUsersAsync()
+    {
+        return await (from user in _unitOfWork.Users.GetAll()
+            join person in _unitOfWork.Persons.GetAll()
+                on user.PersonId equals person.Id
+            join credential in _unitOfWork.UserCredentials.GetAll()
+                on user.Id equals credential.UserId
+            where !user.IsDeleted
+            select new UserInfoDto
+            {
+                Id = user.Id,
+                Username = credential.Username,
+                FirstName = person.FirstName,
+                LastName = person.LastName
+            }).ToListAsync();
     }
 } 

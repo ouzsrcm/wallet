@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Auth;
 using Microsoft.AspNetCore.Mvc.Versioning;
-
+using Microsoft.Extensions.Logging;
 namespace Wallet.Api.Controllers;
 
 /// <summary>

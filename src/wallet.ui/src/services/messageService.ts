@@ -1,5 +1,6 @@
 import api from './api';
 import { IMessage, IMessageCreate } from '../types/message';
+import { IUser } from '../types/user';
 
 export const messageService = {
   getMessages: async (): Promise<IMessage[]> => {
@@ -31,5 +32,10 @@ export const messageService = {
 
   deleteThread: async (messageId: string): Promise<void> => {
     await api.delete(`/messages/${messageId}/thread`);
+  },
+
+  getUsers: async (): Promise<IUser[]> => {
+    const response = await api.get<IUser[]>('/messages/users');
+    return response.data;
   }
 }; 

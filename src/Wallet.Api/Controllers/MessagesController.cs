@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Messages;
+using Wallet.Services.DTOs.Auth;
+using Microsoft.EntityFrameworkCore;
+using Wallet.Services.DTOs.Auth;
+using Wallet.Services.Abstract;
 
 namespace Wallet.Api.Controllers;
 
@@ -18,10 +21,12 @@ namespace Wallet.Api.Controllers;
 public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messageService;
+    private readonly IAuthService _authService;
 
-    public MessagesController(IMessageService messageService)
+    public MessagesController(IMessageService messageService, IAuthService authService)
     {
         _messageService = messageService;
+        _authService = authService;
     }
 
     /// <summary>
@@ -207,6 +212,31 @@ public class MessagesController : ControllerBase
         catch (Exception ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Sistemdeki tüm kullanıcıları listeler
+    /// </summary>
+    [HttpGet("users")]
+    [ProducesResponseType(typeof(List<UserInfoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<UserInfoDto>>> GetUsers()
+    {
+        try
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var currentUser = await _authService.GetUserInfoAsync(userId);
+
+            // Şu an için basit bir liste dönüyoruz, 
+            // ileride pagination, filtreleme gibi özellikler eklenebilir
+            var users = await _messageService.GetAllUsersAsync();
+            
+            return Ok(users.Where(u => u.Id != currentUser.Id).ToList());
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 } 

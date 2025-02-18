@@ -1,5 +1,5 @@
 using Wallet.Services.DTOs.Messages;
-
+using Wallet.Services.DTOs.Auth;
 namespace Wallet.Services.Abstract;
 
 public interface IMessageService
@@ -20,4 +20,6 @@ public interface IMessageService
     // Mesaj silme
     Task DeleteMessageAsync(Guid messageId, Guid userId);
     Task DeleteThreadAsync(Guid messageId, Guid userId);
+
+    Task<List<UserInfoDto>> GetAllUsersAsync();
 } 
