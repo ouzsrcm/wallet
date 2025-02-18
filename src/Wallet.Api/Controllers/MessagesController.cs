@@ -6,6 +6,7 @@ using Wallet.Services.DTOs.Auth;
 using Microsoft.EntityFrameworkCore;
 using Wallet.Services.DTOs.Auth;
 using Wallet.Services.Abstract;
+using Microsoft.Extensions.Configuration;
 
 namespace Wallet.Api.Controllers;
 
@@ -22,11 +23,16 @@ public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messageService;
     private readonly IAuthService _authService;
+    private readonly IConfiguration _configuration;
 
-    public MessagesController(IMessageService messageService, IAuthService authService)
+    public MessagesController(
+        IMessageService messageService,
+        IAuthService authService,
+        IConfiguration configuration)
     {
         _messageService = messageService;
         _authService = authService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -51,11 +57,23 @@ public class MessagesController : ControllerBase
     [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<MessageDto>> SendMessage([FromBody] SendMessageDto messageDto)
+    public async Task<ActionResult<MessageDto>> SendMessage([FromForm] SendMessageDto messageDto)
     {
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+
+            if (messageDto.Attachment != null)
+            {
+                var maxFileSizeInMB = _configuration.GetValue<int>("FileSettings:MaxFileSizeInMB");
+                if (messageDto.Attachment.Length > maxFileSizeInMB * 1024 * 1024)
+                    return BadRequest(new { message = $"File size exceeds {maxFileSizeInMB}MB limit" });
+
+                var allowedTypes = _configuration.GetSection("FileSettings:AllowedFileTypes").Get<string[]>();
+                if (!allowedTypes.Contains(messageDto.Attachment.ContentType))
+                    return BadRequest(new { message = "Invalid file type" });
+            }
+
             var message = await _messageService.SendMessageAsync(userId, messageDto);
             return Ok(message);
         }
@@ -231,7 +249,7 @@ public class MessagesController : ControllerBase
             // Şu an için basit bir liste dönüyoruz, 
             // ileride pagination, filtreleme gibi özellikler eklenebilir
             var users = await _messageService.GetAllUsersAsync();
-            
+
             return Ok(users.Where(u => u.Id != currentUser.Id).ToList());
         }
         catch (Exception ex)
@@ -239,4 +257,4 @@ public class MessagesController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-} 
+}

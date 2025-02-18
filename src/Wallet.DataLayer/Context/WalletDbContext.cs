@@ -17,6 +17,7 @@ public class WalletDbContext : DbContext
     public DbSet<UserCredential> UserCredentials { get; set; }
     public DbSet<Nationality> Nationalities { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<MessageAttachment> MessageAttachments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

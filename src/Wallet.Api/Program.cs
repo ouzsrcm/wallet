@@ -54,6 +54,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPersonUnitOfWork, PersonUnitOfWork>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // API Versioning
 builder.Services.AddApiVersioning(options =>

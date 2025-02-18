@@ -4,16 +4,24 @@ using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Messages;
 using Wallet.Services.UnitOfWorkBase.Abstract;
 using Wallet.Services.DTOs.Auth;
-
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 namespace Wallet.Services.Concrete;
 
 public class MessageService : IMessageService
 {
     private readonly IPersonUnitOfWork _unitOfWork;
+    private readonly IConfiguration _configuration;
+    private readonly IFileStorageService _fileStorageService;
 
-    public MessageService(IPersonUnitOfWork unitOfWork)
+    public MessageService(
+        IPersonUnitOfWork unitOfWork, 
+        IConfiguration configuration,
+        IFileStorageService fileStorageService)
     {
         _unitOfWork = unitOfWork;
+        _configuration = configuration;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<MessageDto> SendMessageAsync(Guid senderId, SendMessageDto messageDto)
@@ -36,6 +44,28 @@ public class MessageService : IMessageService
 
         await _unitOfWork.Messages.AddAsync(message);
         await _unitOfWork.SaveChangesAsync();
+
+        // Eğer dosya eki varsa kaydet
+        if (messageDto.Attachment != null)
+        {
+            var (fileName, filePath) = await _fileStorageService.SaveFileAsync(
+                messageDto.Attachment, 
+                "messages"
+            );
+
+            var attachment = new MessageAttachment
+            {
+                MessageId = message.Id,
+                FileName = messageDto.Attachment.FileName,
+                ContentType = messageDto.Attachment.ContentType,
+                FileSize = messageDto.Attachment.Length,
+                FilePath = fileName,
+                CreatedBy = senderId.ToString()
+            };
+
+            await _unitOfWork.MessageAttachments.AddAsync(attachment);
+            await _unitOfWork.SaveChangesAsync();
+        }
 
         return await GetMessageByIdAsync(message.Id, senderId);
     }
@@ -239,5 +269,82 @@ public class MessageService : IMessageService
                 FirstName = person.FirstName,
                 LastName = person.LastName
             }).ToListAsync();
+    }
+
+    public async Task<MessageAttachmentDto> UploadAttachmentAsync(Guid messageId, IFormFile file)
+    {
+        var message = await _unitOfWork.Messages
+            .GetByIdAsync(messageId) 
+            ?? throw new Exception("Message not found");
+
+        var attachmentPath = _configuration["FileStorage:AttachmentPath"]
+            ?? throw new Exception("Attachment path not configured");
+
+        // Güvenli dosya adı oluştur
+        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+        var filePath = Path.Combine(attachmentPath, fileName);
+
+        // Dizin yoksa oluştur
+        Directory.CreateDirectory(attachmentPath);
+
+        // Dosyayı kaydet
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var attachment = new MessageAttachment
+        {
+            MessageId = messageId,
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            FileSize = file.Length,
+            FilePath = fileName,
+            CreatedBy = message.SenderId.ToString()
+        };
+
+        await _unitOfWork.MessageAttachments.AddAsync(attachment);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new MessageAttachmentDto
+        {
+            Id = attachment.Id,
+            FileName = attachment.FileName,
+            ContentType = attachment.ContentType,
+            FileSize = attachment.FileSize
+        };
+    }
+
+    public async Task<List<MessageAttachmentDto>> GetMessageAttachmentsAsync(Guid messageId)
+    {
+        return await _unitOfWork.MessageAttachments
+            .GetWhere(a => a.MessageId == messageId && !a.IsDeleted)
+            .Select(a => new MessageAttachmentDto
+            {
+                Id = a.Id,
+                FileName = a.FileName,
+                ContentType = a.ContentType,
+                FileSize = a.FileSize
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(byte[] FileContents, string FileName, string ContentType)> DownloadAttachmentAsync(Guid attachmentId)
+    {
+        var attachment = await _unitOfWork.MessageAttachments
+            .GetByIdAsync(attachmentId) 
+            ?? throw new Exception("Attachment not found");
+
+        var attachmentPath = _configuration["FileStorage:AttachmentPath"]
+            ?? throw new Exception("Attachment path not configured");
+
+        var filePath = Path.Combine(attachmentPath, attachment.FilePath);
+
+        if (!File.Exists(filePath))
+            throw new Exception("File not found");
+
+        var fileContents = await File.ReadAllBytesAsync(filePath);
+
+        return (fileContents, attachment.FileName, attachment.ContentType);
     }
 } 

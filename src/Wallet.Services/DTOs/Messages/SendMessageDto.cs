@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Wallet.Services.DTOs.Messages;
 
 /// <summary>
@@ -27,4 +29,5 @@ public class SendMessageDto
     /// Yanıt verilen mesajın kimliği (yanıt için)
     /// </summary>
     public Guid? ParentMessageId { get; set; }
+    public IFormFile? Attachment { get; set; }
 } 

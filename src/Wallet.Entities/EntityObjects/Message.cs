@@ -19,4 +19,6 @@ public class Message : SoftDeleteEntity
     public Guid? ParentMessageId { get; set; }
     public Message? ParentMessage { get; set; }
     public ICollection<Message>? Replies { get; set; }
+
+    public virtual ICollection<MessageAttachment> Attachments { get; set; } = new List<MessageAttachment>();
 } 

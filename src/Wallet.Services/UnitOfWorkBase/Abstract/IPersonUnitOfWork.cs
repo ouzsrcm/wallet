@@ -17,4 +17,5 @@ public interface IPersonUnitOfWork : IUnitOfWork
 
     // Mesajlar
     IBaseRepository<Message> Messages { get; }
+    IBaseRepository<MessageAttachment> MessageAttachments { get; }
 } 

@@ -48,3 +48,37 @@ CREATE INDEX [IX_Messages_ParentMessageId] ON [dbo].[Messages] ([ParentMessageId
 CREATE INDEX [IX_Messages_IsRead] ON [dbo].[Messages] ([IsRead]);
 CREATE INDEX [IX_Messages_CreatedDate] ON [dbo].[Messages] ([CreatedDate]);
 CREATE INDEX [IX_Messages_IsDeleted] ON [dbo].[Messages] ([IsDeleted]);
+
+
+
+-- MessageAttachments tablosunu oluştur
+CREATE TABLE [dbo].[MessageAttachments] (
+    [Id]            UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [MessageId]     UNIQUEIDENTIFIER NOT NULL,
+    [FileName]      NVARCHAR(255)    NOT NULL,
+    [ContentType]   NVARCHAR(100)    NOT NULL,
+    [FileSize]      BIGINT           NOT NULL,
+    [FilePath]      NVARCHAR(1000)   NOT NULL,
+    [CreatedDate]   DATETIME2        NOT NULL DEFAULT GETUTCDATE(),
+    [CreatedBy]     NVARCHAR(50)     NOT NULL,
+    [ModifiedDate]  DATETIME2        NULL,
+    [ModifiedBy]    NVARCHAR(50)     NULL,
+    [IsDeleted]     BIT              NOT NULL DEFAULT 0,
+    [DeletedAt]     DATETIME2        NULL,
+    [DeletedByUserId] NVARCHAR(50)   NULL,
+
+    CONSTRAINT [PK_MessageAttachments] 
+        PRIMARY KEY CLUSTERED ([Id] ASC),
+    
+    CONSTRAINT [FK_MessageAttachments_Messages] 
+        FOREIGN KEY ([MessageId]) 
+        REFERENCES [dbo].[Messages] ([Id])
+        ON DELETE CASCADE
+);
+
+-- İndeksler
+CREATE NONCLUSTERED INDEX [IX_MessageAttachments_MessageId]
+    ON [dbo].[MessageAttachments] ([MessageId] ASC);
+
+CREATE NONCLUSTERED INDEX [IX_MessageAttachments_IsDeleted]
+    ON [dbo].[MessageAttachments] ([IsDeleted] ASC);
