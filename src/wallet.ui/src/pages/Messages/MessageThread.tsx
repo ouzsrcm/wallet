@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { IMessage } from '../../types/message';
 import MessageItem from './MessageItem';
 
@@ -17,6 +17,9 @@ const MessageThread: React.FC<MessageThreadProps> = ({
   currentUserId,
   level = 0
 }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const hasReplies = message.replies && message.replies.length > 0;
+
   return (
     <div className={`${level > 0 ? 'ml-12 mt-2' : ''}`}>
       <MessageItem 
@@ -24,8 +27,11 @@ const MessageThread: React.FC<MessageThreadProps> = ({
         onReply={onReply}
         onStatusChange={onStatusChange}
         currentUserId={currentUserId}
+        hasReplies={hasReplies}
+        onToggle={() => setIsExpanded(!isExpanded)}
+        isExpanded={isExpanded}
       />
-      {message.replies?.map(reply => (
+      {isExpanded && message.replies?.map(reply => (
         <MessageThread
           key={reply.id}
           message={reply}

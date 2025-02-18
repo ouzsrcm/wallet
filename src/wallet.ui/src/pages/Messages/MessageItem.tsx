@@ -5,7 +5,9 @@ import {
   CheckCircleOutlined, 
   EyeOutlined,
   EyeInvisibleOutlined,
-  DeleteOutlined 
+  DeleteOutlined,
+  CaretDownOutlined,
+  CaretRightOutlined 
 } from '@ant-design/icons';
 import { IMessage } from '../../types/message';
 import NewMessageForm from './NewMessageForm';
@@ -19,6 +21,9 @@ interface MessageItemProps {
   onStatusChange: () => void;
   onDelete?: (messageId: string) => void;
   currentUserId?: string;
+  hasReplies?: boolean;
+  onToggle?: () => void;
+  isExpanded?: boolean;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({ 
@@ -26,7 +31,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onReply, 
   onStatusChange,
   onDelete,
-  currentUserId 
+  currentUserId,
+  hasReplies,
+  onToggle,
+  isExpanded
 }) => {
   const [replyModalVisible, setReplyModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,7 +75,18 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   return (
     <List.Item
+      className="hover:bg-gray-50 transition-colors"
       actions={[
+        hasReplies && (
+          <Tooltip title={isExpanded ? "Collapse replies" : "Show replies"}>
+            <Button
+              type="text"
+              icon={isExpanded ? <CaretDownOutlined /> : <CaretRightOutlined />}
+              onClick={onToggle}
+              className="hover:text-blue-500 transition-colors"
+            />
+          </Tooltip>
+        ),
         showReadButton && (
           <Tooltip title={message.isRead ? 'Mark as unread' : 'Mark as read'}>
             <Button 
