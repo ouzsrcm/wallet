@@ -36,18 +36,19 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Yeni bir mesaj gönderir
+    /// Yeni mesaj gönderir
     /// </summary>
-    /// <param name="messageDto">Mesaj detayları</param>
     /// <remarks>
     /// Örnek istek:
     /// 
     ///     POST /api/messages
+    ///     Content-Type: multipart/form-data
     ///     {
     ///         "receiverUsername": "johndoe",
     ///         "subject": "Meeting Tomorrow",
     ///         "content": "Hi John, can we meet tomorrow at 2 PM?",
-    ///         "parentMessageId": null
+    ///         "parentMessageId": null,
+    ///         "attachment": (binary file)
     ///     }
     /// </remarks>
     /// <response code="200">Mesaj başarıyla gönderildi</response>
@@ -84,11 +85,12 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Gelen kutusu mesajlarını getirir
+    /// Gelen kutusu mesajlarını listeler
     /// </summary>
     /// <remarks>
-    /// Kullanıcının gelen kutusundaki tüm mesajları tarih sırasına göre getirir.
-    /// Okunmamış mesajlar önce gösterilir.
+    /// Örnek istek:
+    /// 
+    ///     GET /api/messages/inbox
     /// </remarks>
     /// <response code="200">Mesajlar başarıyla getirildi</response>
     /// <response code="401">Yetkilendirme başarısız</response>
@@ -103,8 +105,14 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Gönderilen mesajları getirir
+    /// Gönderilen mesajları listeler
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     GET /api/messages/sent
+    /// </remarks>
+    /// <response code="200">Mesajlar başarıyla getirildi</response>
     [HttpGet("sent")]
     [ProducesResponseType(typeof(List<MessageDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<MessageDto>>> GetSentMessages()
@@ -115,8 +123,15 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Belirli bir mesajı getirir
+    /// Mesaj detayını getirir
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     GET /api/messages/{id}
+    /// </remarks>
+    /// <response code="200">Mesaj başarıyla getirildi</response>
+    /// <response code="404">Mesaj bulunamadı</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -135,17 +150,25 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Mesaj zincirini getirir
+    /// Mesaj ekini indirir
     /// </summary>
-    [HttpGet("{id}/thread")]
-    [ProducesResponseType(typeof(List<MessageDto>), StatusCodes.Status200OK)]
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     GET /api/messages/attachments/{id}
+    /// </remarks>
+    /// <response code="200">Dosya başarıyla indirildi</response>
+    /// <response code="404">Dosya bulunamadı</response>
+    [HttpGet("attachments/{id}")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<List<MessageDto>>> GetMessageThread(Guid id)
+    public async Task<IActionResult> DownloadAttachment(Guid id)
     {
         try
         {
-            var messages = await _messageService.GetMessageThreadAsync(id);
-            return Ok(messages);
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            var (fileContents, fileName, contentType) = await _messageService.GetAttachmentByIdAsync(id, userId);
+            return File(fileContents, contentType, fileName);
         }
         catch (Exception ex)
         {
@@ -156,6 +179,13 @@ public class MessagesController : ControllerBase
     /// <summary>
     /// Mesajı okundu olarak işaretler
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     PUT /api/messages/{id}/read
+    /// </remarks>
+    /// <response code="200">Mesaj başarıyla okundu</response>
+    /// <response code="404">Mesaj bulunamadı</response>
     [HttpPut("{id}/read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -176,6 +206,13 @@ public class MessagesController : ControllerBase
     /// <summary>
     /// Mesajı okunmadı olarak işaretler
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     PUT /api/messages/{id}/unread
+    /// </remarks>
+    /// <response code="200">Mesaj başarıyla okunmadı</response>
+    /// <response code="404">Mesaj bulunamadı</response>
     [HttpPut("{id}/unread")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -196,6 +233,13 @@ public class MessagesController : ControllerBase
     /// <summary>
     /// Mesajı siler
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     DELETE /api/messages/{id}
+    /// </remarks>
+    /// <response code="200">Mesaj başarıyla silindi</response>
+    /// <response code="404">Mesaj bulunamadı</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -216,6 +260,13 @@ public class MessagesController : ControllerBase
     /// <summary>
     /// Mesaj zincirini siler
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     DELETE /api/messages/{id}/thread
+    /// </remarks>
+    /// <response code="200">Mesaj zincirini başarıyla silindi</response>
+    /// <response code="404">Mesaj zinciri bulunamadı</response>
     [HttpDelete("{id}/thread")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -234,8 +285,15 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
-    /// Sistemdeki tüm kullanıcıları listeler
+    /// Kullanıcı listesini getirir
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     GET /api/messages/users
+    /// </remarks>
+    /// <response code="200">Kullanıcılar başarıyla getirildi</response>
+    /// <response code="401">Yetkilendirme başarısız</response>
     [HttpGet("users")]
     [ProducesResponseType(typeof(List<UserInfoDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -26,7 +26,7 @@ const Messages = () => {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      let response;
+      let response: IMessage[] = [];
       switch (activeTab) {
         case 'sent':
           response = await messageService.getSentMessages();
@@ -36,7 +36,7 @@ const Messages = () => {
           response = [];
           break;
         default: // inbox
-          response = await messageService.getMessages();
+          response = await messageService.getInboxMessages();
       }
       setMessages(response);
     } catch (error) {

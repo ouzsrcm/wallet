@@ -22,4 +22,9 @@ public interface IMessageService
     Task DeleteThreadAsync(Guid messageId, Guid userId);
 
     Task<List<UserInfoDto>> GetAllUsersAsync();
+
+    /// <summary>
+    /// Mesaj ekini ID'ye göre getirir
+    /// </summary>
+    Task<(byte[] FileContents, string FileName, string ContentType)> GetAttachmentByIdAsync(Guid attachmentId, Guid userId);
 } 

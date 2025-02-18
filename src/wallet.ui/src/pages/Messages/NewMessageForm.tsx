@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Select } from 'antd';
+import { Form, Input, Button, Select, Upload, message } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import { messageService } from '../../services/messageService';
 import { IUser } from '../../types/user';
+import { IMessageCreate } from '../../types/message';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 interface NewMessageFormProps {
   form: any;
-  onFinish: (values: any) => void;
+  onFinish: (values: IMessageCreate) => void;
   onCancel: () => void;
   initialSubject?: string;
   initialReceiver?: {
@@ -16,6 +18,7 @@ interface NewMessageFormProps {
     fullName: string;
   };
   isReply?: boolean;
+  users?: IUser[];
 }
 
 const NewMessageForm: React.FC<NewMessageFormProps> = ({
@@ -26,8 +29,8 @@ const NewMessageForm: React.FC<NewMessageFormProps> = ({
   initialReceiver,
   isReply = false
 }) => {
-  const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
     if (!isReply) {
@@ -55,11 +58,34 @@ const NewMessageForm: React.FC<NewMessageFormProps> = ({
     }
   };
 
+  const normFile = (e: any) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
+  };
+
+  const beforeUpload = (file: File) => {
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error('Dosya 10MB\'dan küçük olmalıdır!');
+    }
+    return false; // Otomatik yüklemeyi engelle
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={(values) => {
+        const messageData: IMessageCreate = {
+          receiverUsername: values.receiverUsername,
+          subject: values.subject,
+          content: values.content,
+          attachment: values.attachment?.[0]?.originFileObj
+        };
+        onFinish(messageData);
+      }}
       initialValues={{ 
         subject: initialSubject,
         receiverUsername: initialReceiver?.username
@@ -84,7 +110,7 @@ const NewMessageForm: React.FC<NewMessageFormProps> = ({
             filterOption={(input, option) =>
               (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
             }
-            options={users.map(user => ({
+            options={users?.map(user => ({
               value: user.username,
               label: `${user.fullName} (${user.username})`
             }))}
@@ -106,6 +132,21 @@ const NewMessageForm: React.FC<NewMessageFormProps> = ({
         rules={[{ required: true, message: 'Please input your message' }]}
       >
         <TextArea rows={4} />
+      </Form.Item>
+
+      <Form.Item
+        name="attachment"
+        label="Dosya Eki"
+        valuePropName="fileList"
+        getValueFromEvent={normFile}
+      >
+        <Upload
+          beforeUpload={beforeUpload}
+          maxCount={1}
+          listType="text"
+        >
+          <Button icon={<UploadOutlined />}>Dosya Seç</Button>
+        </Upload>
       </Form.Item>
 
       <Form.Item>

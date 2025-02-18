@@ -77,47 +77,25 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Wallet API",
-        Description = """
-            A financial management API with the following features:
-            - User Authentication
-            - Profile Management
-            - Transaction Management
-            - Messaging System
-            """,
+        Description = "Finansal yönetim için RESTful API",
         Contact = new OpenApiContact
         {
             Name = "API Support",
-            Email = "support@wallet.com",
-            Url = new Uri("https://wallet.com/support")
-        },
-        License = new OpenApiLicense
-        {
-            Name = "MIT License",
-            Url = new Uri("https://opensource.org/licenses/MIT")
+            Email = "support@wallet.com"
         }
     });
 
-    // Tag descriptions
-    options.TagActionsBy(api => new[] { api.GroupName });
-    
-    options.DocInclusionPredicate((name, api) => true);
-    
-    // XML comments için
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    // XML dökümantasyonunu ekle
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
 
-    // Security scheme
+    // JWT auth için swagger UI'da Authorization header'ı ekle
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = """
-            JWT Authorization header using the Bearer scheme.
-            Enter 'Bearer' [space] and then your token in the text input below.
-            Example: 'Bearer 12345abcdef'
-            """,
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Description = "JWT Authorization header using the Bearer scheme",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement

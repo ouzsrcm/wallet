@@ -19,4 +19,5 @@ export interface IMessageCreate {
   subject: string;
   content: string;
   parentMessageId?: string;
+  attachment?: File;
 } 

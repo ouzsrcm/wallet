@@ -253,7 +253,6 @@ public class MessageService : IMessageService
         await _unitOfWork.SaveChangesAsync();
     }
 
-//TODO: bu kisim LINQ kullanilarak yeniden yazilabilir.
     public async Task<List<UserInfoDto>> GetAllUsersAsync()
     {
         return await (from user in _unitOfWork.Users.GetAll()
@@ -315,35 +314,70 @@ public class MessageService : IMessageService
         };
     }
 
-    public async Task<List<MessageAttachmentDto>> GetMessageAttachmentsAsync(Guid messageId)
+    public async Task<List<MessageAttachmentDto>> GetMessageAttachmentsAsync(Guid messageId, Guid userId)
     {
-        return await _unitOfWork.MessageAttachments
-            .GetWhere(a => a.MessageId == messageId && !a.IsDeleted)
-            .Select(a => new MessageAttachmentDto
+        // Önce mesajı kontrol et
+        var message = await _unitOfWork.Messages
+            .GetByIdAsync(messageId) 
+            ?? throw new Exception("Message not found");
+
+        // Kullanıcının yetkisi var mı kontrol et
+        if (message.SenderId != userId && message.ReceiverId != userId)
+            throw new UnauthorizedAccessException("You don't have permission to access this message");
+
+        // Ekleri getir
+        return await (from a in _unitOfWork.MessageAttachments.GetAll()
+            where a.MessageId == messageId && !a.IsDeleted
+            select new MessageAttachmentDto
             {
                 Id = a.Id,
                 FileName = a.FileName,
                 ContentType = a.ContentType,
                 FileSize = a.FileSize
-            })
-            .ToListAsync();
+            }).ToListAsync();
     }
 
     public async Task<(byte[] FileContents, string FileName, string ContentType)> DownloadAttachmentAsync(Guid attachmentId)
     {
+        // Eki bul
         var attachment = await _unitOfWork.MessageAttachments
             .GetByIdAsync(attachmentId) 
             ?? throw new Exception("Attachment not found");
 
-        var attachmentPath = _configuration["FileStorage:AttachmentPath"]
-            ?? throw new Exception("Attachment path not configured");
+        // Dosyayı getir
+        var fileContents = await _fileStorageService.GetFileAsync(attachment.FilePath, "attachments");
 
-        var filePath = Path.Combine(attachmentPath, attachment.FilePath);
+        if (fileContents == null || fileContents.Length == 0)
+            throw new Exception("File content is empty");
 
-        if (!File.Exists(filePath))
-            throw new Exception("File not found");
+        return (fileContents, attachment.FileName, attachment.ContentType);
+    }
 
-        var fileContents = await File.ReadAllBytesAsync(filePath);
+    public async Task<(byte[] FileContents, string FileName, string ContentType)> GetAttachmentByIdAsync(Guid attachmentId, Guid userId)
+    {
+        // Eki ve ilgili mesaj bilgilerini tek sorguda getir
+        var attachment = await (from a in _unitOfWork.MessageAttachments.GetAll()
+            join m in _unitOfWork.Messages.GetAll() 
+                on a.MessageId equals m.Id
+            where a.Id == attachmentId 
+                && !a.IsDeleted 
+                && (m.SenderId == userId || m.ReceiverId == userId)
+            select new 
+            {
+                a.Id,
+                a.FileName,
+                a.ContentType,
+                a.FilePath,
+                m.SenderId,
+                m.ReceiverId
+            }).FirstOrDefaultAsync() 
+            ?? throw new Exception("Attachment not found");
+
+        // Dosyayı getir
+        var fileContents = await _fileStorageService.GetFileAsync(attachment.FilePath, "attachments");
+
+        if (fileContents == null || fileContents.Length == 0)
+            throw new Exception("File content is empty");
 
         return (fileContents, attachment.FileName, attachment.ContentType);
     }

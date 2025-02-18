@@ -14,6 +14,7 @@ namespace Wallet.Api.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json")]
 [ApiVersion("1.0")]
+[Tags("Authentication")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -24,8 +25,18 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Authenticates a user and returns a JWT token
+    /// Kullanıcı girişi yapar
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     POST /api/auth/login
+    ///     {
+    ///         "username": "johndoe",
+    ///         "password": "MySecureP@ss2024",
+    ///         "rememberMe": true
+    ///     }
+    /// </remarks>
     /// <param name="request">Login credentials</param>
     /// <returns>User information and authentication tokens</returns>
     /// <response code="200">Returns the user data and tokens</response>
@@ -47,8 +58,16 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Refreshes an expired JWT token
+    /// Token yenileme
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     POST /api/auth/refresh-token
+    ///     {
+    ///         "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+    ///     }
+    /// </remarks>
     /// <param name="refreshToken">The refresh token</param>
     /// <returns>New JWT token and refresh token</returns>
     /// <response code="200">Returns new tokens</response>
@@ -94,8 +113,18 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Changes the user's password
+    /// Şifre değiştirme
     /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     POST /api/auth/change-password
+    ///     {
+    ///         "email": "john.doe@example.com",
+    ///         "currentPassword": "OldP@ssw0rd",
+    ///         "newPassword": "NewP@ssw0rd"
+    ///     }
+    /// </remarks>
     /// <param name="request">Password change request containing email and passwords</param>
     /// <returns>Success status</returns>
     /// <response code="200">If password was changed successfully</response>
