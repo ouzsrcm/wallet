@@ -22,12 +22,51 @@ public class PersonService : IPersonService
     {
         var person = await _unitOfWork.Persons
             .GetWhere(p => p.Id == id && !p.IsDeleted)
-            .Include(p => p.Addresses.Where(a => !a.IsDeleted))
-            .Include(p => p.Contacts.Where(c => !c.IsDeleted))
+            .Select(p => new PersonDto
+            {
+                Id = p.Id,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                MiddleName = p.MiddleName,
+                DateOfBirth = p.DateOfBirth,
+                Gender = p.Gender,
+                Language = p.Language,
+                TimeZone = p.TimeZone,
+                Currency = p.Currency,
+                Addresses = p.Addresses
+                    .Where(a => !a.IsDeleted)
+                    .Select(a => new PersonAddressDto
+                    {
+                        Id = a.Id,
+                        AddressType = a.AddressType,
+                        AddressName = a.AddressName,
+                        AddressLine1 = a.AddressLine1,
+                        AddressLine2 = a.AddressLine2,
+                        District = a.District,
+                        City = a.City,
+                        State = a.State,
+                        Country = a.Country,
+                        PostalCode = a.PostalCode,
+                        IsDefault = a.IsDefault
+                    }).ToList(),
+                Contacts = p.Contacts
+                    .Where(c => !c.IsDeleted)
+                    .Select(c => new PersonContactDto
+                    {
+                        Id = c.Id,
+                        ContactType = c.ContactType,
+                        ContactName = c.ContactName,
+                        ContactValue = c.ContactValue,
+                        CountryCode = c.CountryCode,
+                        AreaCode = c.AreaCode,
+                        IsDefault = c.IsDefault,
+                        IsPrimary = c.IsPrimary
+                    }).ToList()
+            })
             .FirstOrDefaultAsync() 
             ?? throw new Exception("Person not found");
 
-        return _mapper.Map<PersonDto>(person);
+        return person;
     }
 
     public async Task<PersonDto> CreatePersonAsync(PersonDto personDto)

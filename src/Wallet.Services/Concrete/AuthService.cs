@@ -57,9 +57,9 @@ public class AuthService : IAuthService
 
         return new LoginResponseDto
         {
-            User = new UserDto
+            User = new AuthUserDto
             {
-                Id = user.Id,
+                Id = user.PersonId,
                 Username = user.Credential.Username,
                 Email = user.Credential.Email ?? "",
                 FirstName = user.Person?.FirstName ?? "",
@@ -116,7 +116,7 @@ public class AuthService : IAuthService
 
         return new LoginResponseDto
         {
-            User = new UserDto
+            User = new AuthUserDto
             {
                 Id = user.Id,
                 Username = user.Credential.Username,

@@ -1,6 +1,6 @@
 namespace Wallet.Services.DTOs.Auth;
 
-public class UserDto
+public class AuthUserDto
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
