@@ -12,4 +12,5 @@ public interface IAuthService
     Task<UserInfoDto> GetUserInfoAsync(Guid userId);
     public (string hash, string salt) CreatePasswordHash(string password);
     public (bool, string) VerifyPassword(string password, string passwordHash);
+    Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request);
 } 

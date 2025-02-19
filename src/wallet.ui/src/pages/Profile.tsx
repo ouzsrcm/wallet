@@ -7,6 +7,7 @@ import { personService } from '../services/personService';
 import { PersonData, PersonAddress } from '../types/person';
 import AddressTab from './Profile/AddressTab';
 import ContactTab from './Profile/ContactTab';
+import GenderSelect from '../components/profile/GenderSelect';
 
 const { TabPane } = Tabs;
 
@@ -61,42 +62,6 @@ const Profile = () => {
     }
   };
 
-  const handleEditAddress = (address: PersonAddress) => {
-    setEditingAddress(address);
-    addressForm.setFieldsValue(address);
-    setAddressModalVisible(true);
-  };
-
-  const handleAddContact = async (values: any) => {
-    try {
-      await personService.addContact(personData?.id!, values);
-      message.success('İletişim bilgisi başarıyla eklendi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('İletişim bilgisi eklenirken hata oluştu');
-    }
-  };
-
-  const handleUpdateContact = async (contactId: string, values: any) => {
-    try {
-      await personService.updateContact(contactId, values);
-      message.success('İletişim bilgisi başarıyla güncellendi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('İletişim bilgisi güncellenirken hata oluştu');
-    }
-  };
-
-  const handleDeleteContact = async (contactId: string) => {
-    try {
-      await personService.deleteContact(contactId);
-      message.success('İletişim bilgisi başarıyla silindi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('İletişim bilgisi silinirken hata oluştu');
-    }
-  };
-
   const items = [
     {
       key: '1',
@@ -137,15 +102,11 @@ const Profile = () => {
           </Form.Item>
 
           <Form.Item
-            name="gender"
-            label="Cinsiyet"
-            rules={[{ required: true, message: 'Lütfen cinsiyetinizi seçin' }]}
+              name="gender"
+              label="Cinsiyet"
+              rules={[{ required: true, message: 'Lütfen cinsiyet seçiniz' }]}
           >
-            <Select>
-              <Select.Option value="Male">Erkek</Select.Option>
-              <Select.Option value="Female">Kadın</Select.Option>
-              <Select.Option value="Other">Diğer</Select.Option>
-            </Select>
+              <GenderSelect />
           </Form.Item>
 
           <Form.Item name="language" label="Dil">

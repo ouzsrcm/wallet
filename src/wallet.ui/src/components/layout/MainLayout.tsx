@@ -1,15 +1,20 @@
 import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { menuItems } from '../../config/menuItems';
 import { RootState } from '../../store';
 import { useUserMenu, UserMenuItem } from './UserMenu';
+import { ReactNode } from 'react';
 
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const MainLayout = () => {
+interface MainLayoutProps {
+  children: ReactNode;
+}
+
+const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
   const userMenuItems = useUserMenu();
@@ -43,7 +48,7 @@ const MainLayout = () => {
           />
         </Sider>
         <Content className="p-6">
-          <Outlet />
+          {children}
         </Content>
       </Layout>
       <Footer className="text-center">

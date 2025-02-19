@@ -15,4 +15,5 @@ public class Nationality : SoftDeleteEntity
     public string? SubRegion { get; set; }     // Western Asia, Northern America, Northern Europe
     public string? FlagUrl { get; set; }       // URL to flag image
     public bool IsActive { get; set; }
+    public bool IsLocal { get; set; }
 } 

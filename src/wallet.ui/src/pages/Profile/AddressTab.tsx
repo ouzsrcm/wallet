@@ -3,6 +3,9 @@ import { Button, Table, Modal, Form, Input, Space, Popconfirm, Tag } from 'antd'
 import { personService } from '../../services/personService';
 import { PersonAddress } from '../../types/person';
 import { message } from 'antd';
+
+import AddressTypeSelect from '../../components/address/AddressTypeSelect';
+
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -228,6 +231,13 @@ const AddressTab: React.FC<AddressTabProps> = ({ personId }) => {
           onFinish={editingAddress ? handleUpdateAddress : handleAddAddress}
           layout="vertical"
         >
+          <Form.Item
+              name="addressType"
+              label="Adres Tipi"
+              rules={[{ required: true, message: 'Lütfen adres tipi seçiniz' }]}
+          >
+              <AddressTypeSelect />
+          </Form.Item>
           <Form.Item
             name="addressName"
             label="Adres Adı"

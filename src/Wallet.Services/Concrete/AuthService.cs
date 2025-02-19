@@ -9,6 +9,9 @@ using Wallet.Services.DTOs.Auth;
 using Wallet.Services.UnitOfWorkBase.Abstract;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Wallet.Services.DTOs.Auth;
+using Wallet.Services.Exceptions;
+using Wallet.Entities.Enums;
 
 namespace Wallet.Services.Concrete;
 
@@ -298,5 +301,88 @@ public class AuthService : IAuthService
                 LastName = person.LastName
             }).FirstOrDefaultAsync() 
             ?? throw new Exception("User not found");
+    }
+
+    public async Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request)
+    {
+        // Email ve username kontrolü
+        var existingCredential = await _unitOfWork.UserCredentials
+            .GetWhere(u => u.Email == request.Email || u.Username == request.Username)
+            .FirstOrDefaultAsync();
+
+        if (existingCredential != null)
+        {
+            throw new BadRequestException(
+                existingCredential.Email == request.Email 
+                    ? "Bu email adresi zaten kullanılıyor." 
+                    : "Bu kullanıcı adı zaten kullanılıyor."
+            );
+        }
+
+        // Şifre hash'leme
+        var (passwordHash, passwordSalt) = CreatePasswordHash(request.Password);
+        var nationality = await _unitOfWork.Nationalities.GetSingleAsync(n => n.IsLocal);
+        // Person oluşturma
+        var person = new Person
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Gender = Gender.Unspecified,
+            CreatedDate = DateTime.UtcNow,
+            CreatedBy = "System",
+            NationalityId = nationality?.Id
+        };
+        await _unitOfWork.Persons.AddAsync(person);
+        await _unitOfWork.SaveChangesAsync(); // Person kaydını kaydet
+
+        // User oluşturma
+        var user = new User
+        {
+            PersonId = person.Id, // Person Id'sini burada set et
+            CreatedDate = DateTime.UtcNow,
+            CreatedBy = "System"
+        };
+        await _unitOfWork.Users.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync(); // User kaydını kaydet
+
+        await _unitOfWork.Persons.UpdateAsync(person);
+
+        // UserCredential oluşturma
+        var credential = new UserCredential
+        {
+            UserId = user.Id,
+            Username = request.Username,
+            Email = request.Email,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            CreatedDate = DateTime.UtcNow,
+            CreatedBy = "System"
+        };
+        await _unitOfWork.UserCredentials.AddAsync(credential);
+
+        // JWT token oluştur
+        var token = GenerateJwtToken(user);
+        var refreshToken = GenerateRefreshToken();
+
+        // Refresh token güncelle
+        credential.RefreshToken = refreshToken;
+        credential.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(7);
+        
+        await _unitOfWork.SaveChangesAsync(); // Tüm değişiklikleri kaydet
+
+        return new RegisterResponseDto
+        {
+            Success = true,
+            Message = "Kayıt başarılı",
+            User = new AuthUserDto
+            {
+                Id = person.Id,
+                Username = credential.Username,
+                Email = credential.Email,
+                FirstName = person.FirstName,
+                LastName = person.LastName
+            }
+        };
     }
 } 

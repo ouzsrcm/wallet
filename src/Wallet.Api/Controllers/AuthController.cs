@@ -5,6 +5,8 @@ using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Auth;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Logging;
+using Wallet.Services.Exceptions;
+
 namespace Wallet.Api.Controllers;
 
 /// <summary>
@@ -180,6 +182,45 @@ public class AuthController : ControllerBase
                 email = request.Email,
                 timestamp = DateTime.UtcNow
             });
+        }
+    }
+
+    /// <summary>
+    /// Kullanıcı kaydı
+    /// </summary>
+    /// <remarks>
+    /// Örnek istek:
+    /// 
+    ///     POST /api/auth/register
+    ///     {
+    ///         "email": "john.doe@example.com",
+    ///         "username": "johndoe",
+    ///         "password": "MySecureP@ss2024"
+    ///     }
+    /// </remarks>
+    /// <param name="request">Register request containing email, username, and password</param>
+    /// <returns>Register response</returns>
+    /// <response code="200">Returns register response</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="500">If an error occurs during registration</response>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(RegisterResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+    {
+        try
+        {
+            var response = await _authService.RegisterAsync(request);
+            return Ok(response);
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Kayıt işlemi sırasında bir hata oluştu" });
         }
     }
 } 

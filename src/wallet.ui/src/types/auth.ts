@@ -17,4 +17,15 @@ export interface ILoginResponse {
   user: IUser;
   token: string;
   refreshToken: string;
+}
+
+export interface IRegisterRequest {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface IRegisterResponse {
+  success: boolean;
+  message: string;
 } 

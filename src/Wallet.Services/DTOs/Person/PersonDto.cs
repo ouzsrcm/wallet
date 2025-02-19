@@ -1,3 +1,5 @@
+using Wallet.Entities.Enums;
+
 namespace Wallet.Services.DTOs.Person;
 
 public class PersonDto
@@ -7,7 +9,7 @@ public class PersonDto
     public string LastName { get; set; } = null!;
     public string? MiddleName { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public string Gender { get; set; } = null!;
+    public Gender Gender { get; set; } = Gender.Unspecified;
     public Guid? NationalityId { get; set; }
     public string? TaxNumber { get; set; }
     public string? IdNumber { get; set; }

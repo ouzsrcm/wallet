@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Card, Form, Input, Button, Checkbox, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
 import { authService } from '../../services/authService';
 import { ILoginRequest } from '../../types/auth';
 
-const Login = () => {
+const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,17 +37,15 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Please sign in to your account
-          </p>
-        </div>
-
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: '100vh',
+      background: '#f0f2f5' 
+    }}>
+      <Card style={{ width: 400 }}>
+        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Giriş Yap</h2>
         <Form
           name="login"
           initialValues={{ remember: true }}
@@ -96,9 +94,13 @@ const Login = () => {
               size="large"
               loading={loading}
             >
-              Sign in
+              Giriş Yap
             </Button>
           </Form.Item>
+
+          <div style={{ textAlign: 'center' }}>
+            Hesabınız yok mu? <Link to="/auth/register">Kayıt Ol</Link>
+          </div>
         </Form>
       </Card>
     </div>

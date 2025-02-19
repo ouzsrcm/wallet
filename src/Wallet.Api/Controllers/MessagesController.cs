@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Wallet.Services.DTOs.Messages;
-using Wallet.Services.DTOs.Auth;
 using Microsoft.EntityFrameworkCore;
 using Wallet.Services.DTOs.Auth;
 using Wallet.Services.Abstract;

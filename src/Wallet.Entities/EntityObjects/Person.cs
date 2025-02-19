@@ -1,4 +1,5 @@
 using Wallet.Entities.Base.Concrete;
+using Wallet.Entities.Enums;
 
 namespace Wallet.Entities.EntityObjects;
 
@@ -8,7 +9,7 @@ public class Person : SoftDeleteEntity
     public required string LastName { get; set; }
     public string? MiddleName { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public required string Gender { get; set; }
+    public Gender Gender { get; set; }
     public Guid? NationalityId { get; set; }
     public string? TaxNumber { get; set; }
     public string? IdNumber { get; set; }
@@ -24,4 +25,5 @@ public class Person : SoftDeleteEntity
     public ICollection<PersonContact>? Contacts { get; set; }
     public User? User { get; set; }  // One-to-One relationship with User
     public Nationality? Nationality { get; set; }
+    public ICollection<PersonLanguage>? Languages { get; set; }
 } 
