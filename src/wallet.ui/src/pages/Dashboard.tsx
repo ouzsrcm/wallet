@@ -86,7 +86,7 @@ const Dashboard = () => {
                 {/* Mesaj Özeti */}
                 <Col xs={24} lg={12}>
                     <Card 
-                        title="Son Mesajlar" 
+                        title={`Son Mesajlar ${messages.length}`} 
                         extra={<Link to="/messages">Tümünü Gör</Link>}
                     >
                         <Skeleton loading={loading} active>
