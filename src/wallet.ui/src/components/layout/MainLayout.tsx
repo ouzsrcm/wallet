@@ -1,47 +1,18 @@
 import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
-import { useDispatch, useSelector } from 'react-redux';
-import { menuItems, MenuItem } from '../../config/menuItems';
+import { Outlet, useLocation } from 'react-router-dom';
+import { UserOutlined } from '@ant-design/icons';
+import { useSelector } from 'react-redux';
+import { menuItems } from '../../config/menuItems';
 import { RootState } from '../../store';
-import { logout } from '../../store/slices/authSlice';
-import { authService } from '../../services/authService';
+import { useUserMenu, UserMenuItem } from './UserMenu';
+
 
 const { Header, Content, Footer, Sider } = Layout;
 
 const MainLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      dispatch(logout());
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-      onClick: () => navigate('/profile'),
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: handleLogout,
-    },
-  ];
+  const userMenuItems = useUserMenu();
 
   return (
     <Layout className="min-h-screen">
@@ -49,7 +20,7 @@ const MainLayout = () => {
         <div className="flex justify-between items-center h-full">
           <h1 className="text-2xl m-0">Wallet App</h1>
           
-          <Dropdown menu={{ items: userMenuItems as MenuItem[] }} trigger={['click']}>
+          <Dropdown menu={{ items: userMenuItems as UserMenuItem[] }} trigger={['click']}>
             <Space className="cursor-pointer">
               <Avatar 
                 icon={<UserOutlined />} 
