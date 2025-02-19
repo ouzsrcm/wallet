@@ -7,14 +7,14 @@ public class UserCredential : SoftDeleteEntity
 {
     // User Reference
     public Guid UserId { get; set; }
-    public required User User { get; set; }
+    public User? User { get; set; }
     
     // Authentication
     public required string Username { get; set; }
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
-    public required string PasswordHash { get; set; }
-    public required string PasswordSalt { get; set; }
+    public string PasswordHash { get; set; }
+    public string PasswordSalt { get; set; }
     public DateTime? PasswordChangedAt { get; set; }
     public bool RequirePasswordChange { get; set; }
     

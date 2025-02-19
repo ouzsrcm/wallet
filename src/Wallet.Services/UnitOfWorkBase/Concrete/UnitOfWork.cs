@@ -26,6 +26,8 @@ public class UnitOfWork : IUnitOfWork
             {typeof(Person), new BaseRepository<Person>(_context)},
             {typeof(PersonAddress), new BaseRepository<PersonAddress>(_context)},
             {typeof(Nationality), new BaseRepository<Nationality>(_context)},
+            {typeof(Message), new BaseRepository<Message>(_context)},
+            {typeof(MessageAttachment), new BaseRepository<MessageAttachment>(_context)},
         };
     }
 

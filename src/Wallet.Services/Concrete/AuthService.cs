@@ -186,7 +186,7 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(randomNumber);
     }
 
-    internal (bool, string) VerifyPassword(string password, string passwordHash)
+    public (bool, string) VerifyPassword(string password, string passwordHash)
     {
         var (hash, _) = CreatePasswordHash(password);
 
@@ -194,7 +194,7 @@ public class AuthService : IAuthService
     }
 
     // Yeni şifre oluşturma için yardımcı metod
-    internal (string hash, string salt) CreatePasswordHash(string password)
+    public (string hash, string salt) CreatePasswordHash(string password)
     {
         // Sabit salt kullan (password'den türetilmiş)
         byte[] saltBytes = Encoding.UTF8.GetBytes(password)
