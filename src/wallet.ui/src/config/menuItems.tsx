@@ -14,11 +14,6 @@ export const menuItems: MenuItem[] = [
     label: <Link to="/">Dashboard</Link>,
   },
   {
-    key: '/transactions',
-    icon: <TransactionOutlined />,
-    label: <Link to="/transactions">Transactions</Link>,
-  },
-  {
     key: '/profile',
     icon: <UserOutlined />,
     label: <Link to="/profile">Profile</Link>,
