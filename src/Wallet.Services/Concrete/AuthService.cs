@@ -41,6 +41,8 @@ public class AuthService : IAuthService
 
         user.Credential = cre;
 
+        user.Person = await _unitOfWork.Persons.GetSingleAsync(p => p.Id == user.PersonId);
+
         // Verify password
         var (isValid, computedHash) = VerifyPassword(request.Password, user.Credential.PasswordHash);
         if (!isValid)

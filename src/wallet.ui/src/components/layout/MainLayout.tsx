@@ -1,12 +1,11 @@
-import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
+import { Layout, Menu, Dropdown, Space, Avatar, MenuProps } from 'antd';
 import { useLocation } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { menuItems } from '../../config/menuItems';
 import { RootState } from '../../store';
-import { useUserMenu, UserMenuItem } from './UserMenu';
+import { useUserMenu } from './UserMenu.tsx';
 import { ReactNode } from 'react';
-
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -25,7 +24,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="flex justify-between items-center h-full">
           <h1 className="text-2xl m-0">Wallet App</h1>
           
-          <Dropdown menu={{ items: userMenuItems as UserMenuItem[] }} trigger={['click']}>
+          <Dropdown menu={{ items: userMenuItems as MenuProps['items'] }} trigger={['click']}>
             <Space className="cursor-pointer">
               <Avatar 
                 icon={<UserOutlined />} 

@@ -45,7 +45,7 @@ const Login: React.FC = () => {
       background: '#f0f2f5' 
     }}>
       <Card style={{ width: 400 }}>
-        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Giriş Yap</h2>
+        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Login</h2>
         <Form
           name="login"
           initialValues={{ remember: true }}
@@ -80,7 +80,7 @@ const Login: React.FC = () => {
                 <Checkbox>Remember me</Checkbox>
               </Form.Item>
 
-              <a className="text-primary hover:text-primary-dark">
+              <a href="/auth/forgot-password" className="text-primary hover:text-primary-dark">
                 Forgot password?
               </a>
             </div>
@@ -94,12 +94,12 @@ const Login: React.FC = () => {
               size="large"
               loading={loading}
             >
-              Giriş Yap
+              Login
             </Button>
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            Hesabınız yok mu? <Link to="/auth/register">Kayıt Ol</Link>
+            You Don't have an account? <Link to="/auth/register">Register!</Link>
           </div>
         </Form>
       </Card>

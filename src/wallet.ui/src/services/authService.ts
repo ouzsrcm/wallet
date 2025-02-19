@@ -14,6 +14,10 @@ const authService = {
 
     logout: async (): Promise<void> => {
         await api.post('/auth/logout');
+    },
+
+    forgotPassword: async (email: string): Promise<void> => {
+        await api.post('/auth/forgot-password', { email });
     }
 };
 

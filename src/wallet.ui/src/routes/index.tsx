@@ -7,6 +7,7 @@ import Profile from '../pages/Profile';
 import Messages from '../pages/Messages';
 import Login from '../pages/auth/Login';
 import Registration from '../pages/auth/Registration';
+import ForgotPassword from '../pages/auth/ForgotPassword';
 
 const AppRoutes = () => {
   return (
@@ -15,6 +16,7 @@ const AppRoutes = () => {
       <Route path="/auth">
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Registration />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
       </Route>
 
       {/* Protected Routes */}
