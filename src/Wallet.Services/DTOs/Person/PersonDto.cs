@@ -8,7 +8,7 @@ public class PersonDto
     public string? MiddleName { get; set; }
     public DateTime DateOfBirth { get; set; }
     public string Gender { get; set; } = null!;
-    public string? NationalityId { get; set; }
+    public Guid? NationalityId { get; set; }
     public string? TaxNumber { get; set; }
     public string? IdNumber { get; set; }
     public string? ProfilePictureUrl { get; set; }

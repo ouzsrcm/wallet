@@ -53,6 +53,11 @@ public class BaseRepository<T> : IBaseRepository<T> where T : SoftDeleteEntity
     // Insert Methods
     public async Task<T> AddAsync(T entity)
     {
+        entity.IsDeleted = false;
+        entity.CreatedDate = DateTime.UtcNow;
+        entity.CreatedBy = "System";
+        entity.RowVersion = 0;
+
         await _dbSet.AddAsync(entity);
         await SaveChangesAsync();
         return entity;
@@ -148,4 +153,4 @@ public class BaseRepository<T> : IBaseRepository<T> where T : SoftDeleteEntity
         _dbSet.UpdateRange(entities);
         await SaveChangesAsync();
     }
-} 
+}

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using AutoMapper;
+using Wallet.Services.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,7 +131,8 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// AutoMapper configuration
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 

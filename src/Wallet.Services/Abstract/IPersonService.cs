@@ -21,4 +21,8 @@ public interface IPersonService
     Task<PersonContactDto> UpdateContactAsync(Guid contactId, PersonContactDto contactDto);
     Task DeleteContactAsync(Guid contactId);
     Task<PersonContactDto> SetDefaultContactAsync(Guid contactId);
+    
+    Task<List<PersonContactDto>> GetPersonContactsAsync(Guid personId);
+
+    Task<List<PersonAddressDto>> GetPersonAddressesAsync(Guid personId);
 } 

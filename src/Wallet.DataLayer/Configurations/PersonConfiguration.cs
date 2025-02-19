@@ -42,6 +42,10 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(x => x.Currency)
                .HasMaxLength(3); // ISO 4217 currency codes
 
+        builder.Property(x => x.NationalityId)
+               .HasColumnType("uniqueidentifier")
+               .IsRequired(false);
+
         // Relationships
         builder.HasMany(p => p.Addresses)
                .WithOne(a => a.Person)
@@ -52,5 +56,10 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
                .WithOne(c => c.Person)
                .HasForeignKey(c => c.PersonId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Nationality)
+               .WithMany()
+               .HasForeignKey(x => x.NationalityId)
+               .OnDelete(DeleteBehavior.SetNull);
     }
 } 

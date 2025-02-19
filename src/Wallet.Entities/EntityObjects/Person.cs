@@ -9,7 +9,7 @@ public class Person : SoftDeleteEntity
     public string? MiddleName { get; set; }
     public DateTime DateOfBirth { get; set; }
     public required string Gender { get; set; }
-    public string? NationalityId { get; set; }
+    public Guid? NationalityId { get; set; }
     public string? TaxNumber { get; set; }
     public string? IdNumber { get; set; }
     public string? ProfilePictureUrl { get; set; }

@@ -4,6 +4,7 @@ using Wallet.Entities.EntityObjects;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Person;
 using Wallet.Services.UnitOfWorkBase.Abstract;
+using Wallet.Services.Exceptions;
 
 namespace Wallet.Services.Concrete;
 
@@ -21,7 +22,7 @@ public class PersonService : IPersonService
     public async Task<PersonDto> GetPersonByIdAsync(Guid id)
     {
         var person = await _unitOfWork.Persons
-            .GetWhere(p => p.Id == id && !p.IsDeleted)
+            .GetWhere(p => p.Id == id)
             .Select(p => new PersonDto
             {
                 Id = p.Id,
@@ -30,41 +31,14 @@ public class PersonService : IPersonService
                 MiddleName = p.MiddleName,
                 DateOfBirth = p.DateOfBirth,
                 Gender = p.Gender,
-                Language = p.Language,
-                TimeZone = p.TimeZone,
-                Currency = p.Currency,
-                Addresses = p.Addresses
-                    .Where(a => !a.IsDeleted)
-                    .Select(a => new PersonAddressDto
-                    {
-                        Id = a.Id,
-                        AddressType = a.AddressType,
-                        AddressName = a.AddressName,
-                        AddressLine1 = a.AddressLine1,
-                        AddressLine2 = a.AddressLine2,
-                        District = a.District,
-                        City = a.City,
-                        State = a.State,
-                        Country = a.Country,
-                        PostalCode = a.PostalCode,
-                        IsDefault = a.IsDefault
-                    }).ToList(),
-                Contacts = p.Contacts
-                    .Where(c => !c.IsDeleted)
-                    .Select(c => new PersonContactDto
-                    {
-                        Id = c.Id,
-                        ContactType = c.ContactType,
-                        ContactName = c.ContactName,
-                        ContactValue = c.ContactValue,
-                        CountryCode = c.CountryCode,
-                        AreaCode = c.AreaCode,
-                        IsDefault = c.IsDefault,
-                        IsPrimary = c.IsPrimary
-                    }).ToList()
+                NationalityId = p.NationalityId,
+                TaxNumber = p.TaxNumber,
+                IdNumber = p.IdNumber
             })
-            .FirstOrDefaultAsync() 
-            ?? throw new Exception("Person not found");
+            .FirstOrDefaultAsync();
+
+        if (person == null)
+            throw new NotFoundException("Person not found");
 
         return person;
     }
@@ -102,6 +76,12 @@ public class PersonService : IPersonService
 
         var address = _mapper.Map<PersonAddress>(addressDto);
         address.PersonId = personId;
+        address.IsDefault = false;
+        address.IsVerified = false;
+        address.RowVersion = 0;
+        address.CreatedDate = DateTime.UtcNow;
+        address.CreatedBy = "System";
+        address.IsDeleted = false;
 
         if (address.IsDefault)
         {
@@ -124,23 +104,20 @@ public class PersonService : IPersonService
     public async Task<PersonAddressDto> UpdateAddressAsync(Guid addressId, PersonAddressDto addressDto)
     {
         var address = await _unitOfWork.PersonAddresses.GetByIdAsync(addressId)
-            ?? throw new Exception("Address not found");
+            ?? throw new NotFoundException("Address not found");
 
-        if (addressDto.IsDefault && !address.IsDefault)
-        {
-            // Diğer varsayılan adresleri güncelle
-            var defaultAddresses = await _unitOfWork.PersonAddresses
-                .GetWhere(a => a.PersonId == address.PersonId && a.IsDefault)
-                .ToListAsync();
+        // ID'yi güncelleme, sadece diğer özellikleri güncelle
+        address.AddressType = addressDto.AddressType;
+        address.AddressName = addressDto.AddressName;
+        address.AddressLine1 = addressDto.AddressLine1;
+        address.AddressLine2 = addressDto.AddressLine2;
+        address.District = addressDto.District;
+        address.City = addressDto.City;
+        address.State = addressDto.State;
+        address.Country = addressDto.Country;
+        address.PostalCode = addressDto.PostalCode;
+        address.IsDefault = addressDto.IsDefault;
 
-            foreach (var defaultAddress in defaultAddresses)
-            {
-                defaultAddress.IsDefault = false;
-                await _unitOfWork.PersonAddresses.UpdateAsync(defaultAddress);
-            }
-        }
-
-        _mapper.Map(addressDto, address);
         await _unitOfWork.PersonAddresses.UpdateAsync(address);
         return _mapper.Map<PersonAddressDto>(address);
     }
@@ -187,8 +164,8 @@ public class PersonService : IPersonService
         {
             // Diğer varsayılan/birincil kişileri güncelle
             var existingContacts = await _unitOfWork.PersonContacts
-                .GetWhere(c => c.PersonId == personId && 
-                              (c.IsDefault || c.IsPrimary) && 
+                .GetWhere(c => c.PersonId == personId &&
+                              (c.IsDefault || c.IsPrimary) &&
                               c.ContactType == contact.ContactType)
                 .ToListAsync();
 
@@ -207,27 +184,17 @@ public class PersonService : IPersonService
     public async Task<PersonContactDto> UpdateContactAsync(Guid contactId, PersonContactDto contactDto)
     {
         var contact = await _unitOfWork.PersonContacts.GetByIdAsync(contactId)
-            ?? throw new Exception("Contact not found");
+            ?? throw new NotFoundException("Contact not found");
 
-        if ((contactDto.IsDefault && !contact.IsDefault) || 
-            (contactDto.IsPrimary && !contact.IsPrimary))
-        {
-            // Diğer varsayılan/birincil kişileri güncelle
-            var existingContacts = await _unitOfWork.PersonContacts
-                .GetWhere(c => c.PersonId == contact.PersonId && 
-                              (c.IsDefault || c.IsPrimary) && 
-                              c.ContactType == contact.ContactType)
-                .ToListAsync();
+        // ID'yi güncelleme, sadece diğer özellikleri güncelle
+        contact.ContactType = contactDto.ContactType;
+        contact.ContactName = contactDto.ContactName;
+        contact.ContactValue = contactDto.ContactValue;
+        contact.CountryCode = contactDto.CountryCode;
+        contact.AreaCode = contactDto.AreaCode;
+        contact.IsDefault = contactDto.IsDefault;
+        contact.IsPrimary = contactDto.IsPrimary;
 
-            foreach (var existingContact in existingContacts)
-            {
-                if (contactDto.IsDefault) existingContact.IsDefault = false;
-                if (contactDto.IsPrimary) existingContact.IsPrimary = false;
-                await _unitOfWork.PersonContacts.UpdateAsync(existingContact);
-            }
-        }
-
-        _mapper.Map(contactDto, contact);
         await _unitOfWork.PersonContacts.UpdateAsync(contact);
         return _mapper.Map<PersonContactDto>(contact);
     }
@@ -247,8 +214,8 @@ public class PersonService : IPersonService
 
         // Diğer varsayılan kişileri güncelle
         var defaultContacts = await _unitOfWork.PersonContacts
-            .GetWhere(c => c.PersonId == contact.PersonId && 
-                          c.IsDefault && 
+            .GetWhere(c => c.PersonId == contact.PersonId &&
+                          c.IsDefault &&
                           c.ContactType == contact.ContactType)
             .ToListAsync();
 
@@ -262,4 +229,49 @@ public class PersonService : IPersonService
         await _unitOfWork.PersonContacts.UpdateAsync(contact);
         return _mapper.Map<PersonContactDto>(contact);
     }
-} 
+
+    public async Task<List<PersonContactDto>> GetPersonContactsAsync(Guid personId)
+    {
+        var contacts = await _unitOfWork.PersonContacts
+            .GetWhere(c => c.PersonId == personId && !c.IsDeleted)
+            .Select(c => new PersonContactDto
+            {
+                Id = c.Id,
+                ContactType = c.ContactType,
+                ContactName = c.ContactName,
+                ContactValue = c.ContactValue,
+                IsDefault = c.IsDefault,
+                IsPrimary = c.IsPrimary
+            })
+            .OrderByDescending(c => c.IsPrimary)
+            .ThenByDescending(c => c.IsDefault)
+            .ThenBy(c => c.ContactType)
+            .ToListAsync();
+
+        return contacts;
+    }
+
+    public async Task<List<PersonAddressDto>> GetPersonAddressesAsync(Guid personId)
+    {
+        // Sadece gerekli alanları seç ve tek sorguda getir
+        var addresses = await _unitOfWork.PersonAddresses
+            .GetWhere(a => a.PersonId == personId && !a.IsDeleted)
+            .Select(a => new PersonAddressDto
+            {
+                Id = a.Id,
+                AddressType = a.AddressType,
+                AddressName = a.AddressName,
+                AddressLine1 = a.AddressLine1,
+                City = a.City,
+                Country = a.Country,
+                PostalCode = a.PostalCode,
+                IsDefault = a.IsDefault
+            })
+            .OrderByDescending(a => a.IsDefault)
+            .ThenBy(a => a.AddressType)
+            .ThenBy(a => a.AddressName)
+            .ToListAsync();
+
+        return addresses;
+    }
+}

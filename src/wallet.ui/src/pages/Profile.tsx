@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, DatePicker, Select, message, Tabs, Space } from 'antd';
+import { Card, Form, Input, Button, DatePicker, Select, message, Tabs, Space, Table, Modal, Popconfirm, Tag } from 'antd';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import api from '../services/api';
 import dayjs from 'dayjs';
 import { personService } from '../services/personService';
-import { PersonData } from '../types/person';
+import { PersonData, PersonAddress } from '../types/person';
+import AddressTab from './Profile/AddressTab';
+import ContactTab from './Profile/ContactTab';
 
 const { TabPane } = Tabs;
 
@@ -14,15 +15,24 @@ const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [personData, setPersonData] = useState<PersonData | null>(null);
+  const [addressForm] = Form.useForm();
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<PersonAddress | null>(null);
+  const [addresses, setAddresses] = useState<PersonAddress[]>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
 
   useEffect(() => {
     fetchPersonData();
-  }, []);
+  }, [user?.id]);
 
   const fetchPersonData = async () => {
     try {
       setLoading(true);
-      const data = await personService.getPerson(user?.id);
+      if (!user?.id) {
+        message.error('Kullanıcı bilgisi bulunamadı');
+        return;
+      }
+      const data = await personService.getPerson(user.id);
       setPersonData(data);
       form.setFieldsValue({
         ...data,
@@ -51,34 +61,10 @@ const Profile = () => {
     }
   };
 
-  const handleAddAddress = async (values: any) => {
-    try {
-      await personService.addAddress(personData?.id!, values);
-      message.success('Adres başarıyla eklendi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('Adres eklenirken hata oluştu');
-    }
-  };
-
-  const handleUpdateAddress = async (addressId: string, values: any) => {
-    try {
-      await personService.updateAddress(addressId, values);
-      message.success('Adres başarıyla güncellendi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('Adres güncellenirken hata oluştu');
-    }
-  };
-
-  const handleDeleteAddress = async (addressId: string) => {
-    try {
-      await personService.deleteAddress(addressId);
-      message.success('Adres başarıyla silindi');
-      await fetchPersonData();
-    } catch (error) {
-      message.error('Adres silinirken hata oluştu');
-    }
+  const handleEditAddress = (address: PersonAddress) => {
+    setEditingAddress(address);
+    addressForm.setFieldsValue(address);
+    setAddressModalVisible(true);
   };
 
   const handleAddContact = async (values: any) => {
@@ -180,18 +166,12 @@ const Profile = () => {
     {
       key: '2',
       label: 'Adresler',
-      children: (
-        /* Adres listesi ve form buraya gelecek */
-        <div>Adresler içeriği</div>
-      )
+      children: <AddressTab personId={personData?.id} />
     },
     {
       key: '3',
       label: 'İletişim Bilgileri',
-      children: (
-        /* İletişim bilgileri listesi ve form buraya gelecek */
-        <div>İletişim bilgileri içeriği</div>
-      )
+      children: <ContactTab personId={personData?.id} />
     }
   ];
 

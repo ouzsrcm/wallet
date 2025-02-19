@@ -14,6 +14,11 @@ export const personService = {
     },
 
     // Adres işlemleri
+    getAddresses: async (personId: string): Promise<PersonAddress[]> => {
+        const response = await api.get(`/Person/${personId}/addresses`);
+        return response.data;
+    },
+
     addAddress: async (personId: string, address: Partial<PersonAddress>): Promise<PersonAddress> => {
         const response = await api.post(`/Person/${personId}/address`, address);
         return response.data;
@@ -34,6 +39,11 @@ export const personService = {
     },
 
     // İletişim işlemleri
+    getContacts: async (personId: string): Promise<PersonContact[]> => {
+        const response = await api.get(`/Person/${personId}/contacts`);
+        return response.data;
+    },
+
     addContact: async (personId: string, contact: Partial<PersonContact>): Promise<PersonContact> => {
         const response = await api.post(`/Person/${personId}/contact`, contact);
         return response.data;

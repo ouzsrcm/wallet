@@ -349,4 +349,92 @@ public class PersonController : ControllerBase
             return NotFound(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Kişinin iletişim bilgilerini getirir
+    /// </summary>
+    /// <remarks>
+    /// Örnek yanıt:
+    /// 
+    ///     [
+    ///         {
+    ///             "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///             "contactType": "Email",
+    ///             "contactValue": "john.doe@example.com",
+    ///             "isDefault": true,
+    ///             "isPrimary": true
+    ///         },
+    ///         {
+    ///             "id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+    ///             "contactType": "Phone",
+    ///             "contactValue": "+905551234567",
+    ///             "isDefault": false,
+    ///             "isPrimary": false
+    ///         }
+    ///     ]
+    /// </remarks>
+    /// <param name="personId">Kişi ID</param>
+    /// <returns>İletişim bilgileri listesi</returns>
+    [HttpGet("{personId}/contacts")]
+    [ProducesResponseType(typeof(List<PersonContactDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<PersonContactDto>>> GetPersonContacts(Guid personId)
+    {
+        try
+        {
+            var contacts = await _personService.GetPersonContactsAsync(personId);
+            return Ok(contacts);
+        }
+        catch (Exception ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Kişinin adres bilgilerini getirir
+    /// </summary>
+    /// <remarks>
+    /// Örnek yanıt:
+    /// 
+    ///     [
+    ///         {
+    ///             "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///             "addressType": "Home",
+    ///             "addressName": "Ev Adresi",
+    ///             "addressLine1": "Bağdat Caddesi No:123",
+    ///             "city": "Istanbul",
+    ///             "country": "Turkey",
+    ///             "postalCode": "34744",
+    ///             "isDefault": true
+    ///         },
+    ///         {
+    ///             "id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+    ///             "addressType": "Work",
+    ///             "addressName": "İş Adresi",
+    ///             "addressLine1": "Levent Plaza",
+    ///             "city": "Istanbul",
+    ///             "country": "Turkey",
+    ///             "postalCode": "34330",
+    ///             "isDefault": false
+    ///         }
+    ///     ]
+    /// </remarks>
+    /// <param name="personId">Kişi ID</param>
+    /// <returns>Adres bilgileri listesi</returns>
+    [HttpGet("{personId}/addresses")]
+    [ProducesResponseType(typeof(List<PersonAddressDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<PersonAddressDto>>> GetPersonAddresses(Guid personId)
+    {
+        try
+        {
+            var addresses = await _personService.GetPersonAddressesAsync(personId);
+            return Ok(addresses);
+        }
+        catch (Exception ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 } 
