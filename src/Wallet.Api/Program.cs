@@ -67,6 +67,8 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IFinanceUnitOfWork, FinanceUnitOfWork>();
+builder.Services.AddScoped<IFinanceService, FinanceService>();
 
 // Audit interceptor'ı kaydet
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();

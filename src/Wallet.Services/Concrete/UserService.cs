@@ -25,7 +25,7 @@ public class UserService : IUserService
 
     public async Task<UserDto> GetUserByIdAsync(Guid id)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == id && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -36,7 +36,7 @@ public class UserService : IUserService
 
     public async Task<UserDto> GetUserByUsernameAsync(string username)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Credential!.Username == username && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -48,7 +48,7 @@ public class UserService : IUserService
     public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
     {
         // Kullanıcı adı kontrolü
-        var existingUser = await _unitOfWork.UserCredentials
+        var existingUser = await _unitOfWork.GetRepository<UserCredential>()
             .GetWhere(uc => uc.Username == userDto.Username)
             .AnyAsync();
 
@@ -58,7 +58,7 @@ public class UserService : IUserService
         // Email kontrolü
         if (!string.IsNullOrEmpty(userDto.Email))
         {
-            var existingEmail = await _unitOfWork.UserCredentials
+            var existingEmail = await _unitOfWork.GetRepository<UserCredential>()
                 .GetWhere(uc => uc.Email == userDto.Email)
                 .AnyAsync();
 
@@ -67,7 +67,7 @@ public class UserService : IUserService
         }
 
         // Person kontrolü
-        var person = await _unitOfWork.Persons
+        var person = await _unitOfWork.GetRepository<Person>()
             .GetByIdAsync(userDto.PersonId)
             ?? throw new Exception("Person not found");
 
@@ -93,13 +93,13 @@ public class UserService : IUserService
             }
         };
 
-        await _unitOfWork.Users.AddAsync(user);
+        await _unitOfWork.GetRepository<User>().AddAsync(user);
         return _mapper.Map<UserDto>(user);
     }
 
     public async Task<UserDto> UpdateUserAsync(Guid id, UpdateUserDto userDto)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == id && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -115,21 +115,21 @@ public class UserService : IUserService
         if (userDto.SMSNotificationsEnabled.HasValue)
             user.SMSNotificationsEnabled = userDto.SMSNotificationsEnabled.Value;
 
-        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.GetRepository<User>().UpdateAsync(user);
         return _mapper.Map<UserDto>(user);
     }
 
     public async Task DeleteUserAsync(Guid id)
     {
-        var user = await _unitOfWork.Users.GetByIdAsync(id)
+        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(id)
             ?? throw new Exception("User not found");
 
-        await _unitOfWork.Users.SoftDeleteAsync(user);
+        await _unitOfWork.GetRepository<User>().SoftDeleteAsync(user);
     }
 
     public async Task<UserCredentialDto> UpdateCredentialsAsync(Guid userId, UpdateUserCredentialDto credentialDto)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -141,7 +141,7 @@ public class UserService : IUserService
         // Email kontrolü
         if (!string.IsNullOrEmpty(credentialDto.Email) && credentialDto.Email != credential.Email)
         {
-            var existingEmail = await _unitOfWork.UserCredentials
+            var existingEmail = await _unitOfWork.GetRepository<UserCredential>()
                 .GetWhere(uc => uc.Email == credentialDto.Email)
                 .AnyAsync();
 
@@ -155,7 +155,7 @@ public class UserService : IUserService
         // Telefon kontrolü
         if (!string.IsNullOrEmpty(credentialDto.PhoneNumber) && credentialDto.PhoneNumber != credential.PhoneNumber)
         {
-            var existingPhone = await _unitOfWork.UserCredentials
+            var existingPhone = await _unitOfWork.GetRepository<UserCredential>()
                 .GetWhere(uc => uc.PhoneNumber == credentialDto.PhoneNumber)
                 .AnyAsync();
 
@@ -179,13 +179,13 @@ public class UserService : IUserService
         if (credentialDto.Roles != null)
             credential.Roles = credentialDto.Roles;
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return _mapper.Map<UserCredentialDto>(credential);
     }
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -207,13 +207,13 @@ public class UserService : IUserService
         credential.PasswordChangedAt = DateTime.UtcNow;
         credential.RequirePasswordChange = false;
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 
     public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -229,13 +229,13 @@ public class UserService : IUserService
         credential.PasswordChangedAt = DateTime.UtcNow;
         credential.RequirePasswordChange = true;
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 
     public async Task<bool> VerifyEmailAsync(Guid userId, string token)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -254,13 +254,13 @@ public class UserService : IUserService
         credential.EmailVerificationToken = null;
         credential.EmailVerificationTokenExpireDate = null;
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 
     public async Task<bool> VerifyPhoneAsync(Guid userId, string token)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -279,13 +279,13 @@ public class UserService : IUserService
         credential.PhoneVerificationToken = null;
         credential.PhoneVerificationTokenExpireDate = null;
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 
     public async Task<bool> ToggleTwoFactorAsync(Guid userId, bool enable, string? type = null)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -310,13 +310,13 @@ public class UserService : IUserService
             credential.TwoFactorKey = null;
         }
 
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 
     public async Task<bool> UpdateRolesAsync(Guid userId, IEnumerable<string> roles)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Id == userId && !u.IsDeleted)
             .Include(u => u.Credential)
             .FirstOrDefaultAsync() 
@@ -326,7 +326,7 @@ public class UserService : IUserService
             ?? throw new Exception("User credentials not found");
 
         credential.Roles = roles;
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
         return true;
     }
 } 

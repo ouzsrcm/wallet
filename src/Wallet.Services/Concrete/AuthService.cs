@@ -28,20 +28,22 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto> LoginAsync(LoginRequestDto request)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetSingleAsync(u => u.Credential!.Username == request.Username);
 
         if (user == null)
             throw new Exception("User not found");
 
-        var cre = await _unitOfWork.UserCredentials.GetSingleAsync(u => u.UserId == user.Id);
+        var cre = await _unitOfWork.GetRepository<UserCredential>()
+            .GetSingleAsync(u => u.UserId == user.Id);
 
         if (user.Credential == null)
             throw new Exception("User not found");
 
         user.Credential = cre;
 
-        user.Person = await _unitOfWork.Persons.GetSingleAsync(p => p.Id == user.PersonId);
+        user.Person = await _unitOfWork.GetRepository<Person>()
+            .GetSingleAsync(p => p.Id == user.PersonId);
 
         // Verify password
         var (isValid, computedHash) = VerifyPassword(request.Password, user.Credential.PasswordHash);
@@ -58,7 +60,7 @@ public class AuthService : IAuthService
         // Update user's refresh token
         user.Credential.RefreshToken = refreshToken;
         user.Credential.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(7);
-        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.GetRepository<User>().UpdateAsync(user);
 
         return new LoginResponseDto
         {
@@ -103,7 +105,7 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto> RefreshTokenAsync(string refreshToken)
     {
-        var user = await _unitOfWork.Users
+        var user = await _unitOfWork.GetRepository<User>()
             .GetSingleAsync(u => u.Credential!.RefreshToken == refreshToken);
 
         if (user == null || user.Credential == null)
@@ -117,7 +119,7 @@ public class AuthService : IAuthService
 
         user.Credential.RefreshToken = newRefreshToken;
         user.Credential.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(7);
-        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.GetRepository<User>().UpdateAsync(user);
 
         return new LoginResponseDto
         {
@@ -136,12 +138,12 @@ public class AuthService : IAuthService
 
     public async Task LogoutAsync(Guid userId)
     {
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userId);
         if (user?.Credential != null)
         {
             user.Credential.RefreshToken = null;
             user.Credential.RefreshTokenExpireDate = null;
-            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.GetRepository<User>().UpdateAsync(user);
         }
     }
 
@@ -227,18 +229,14 @@ public class AuthService : IAuthService
     public async Task<bool> ChangePasswordAsync(Guid userId, string email, string currentPassword, string newPassword)
     {
         // Kullanıcıyı bul
-        var user = await _unitOfWork.Users
-            .GetSingleAsync(u => /* u.Id == userId &&  */u.Credential!.Email == email);
-
-        if (user == null)
-            throw new Exception("User not found");
+        var user = await _unitOfWork.GetRepository<User>()
+            .GetSingleAsync(u => /* u.Id == userId &&  */u.Credential!.Email == email)
+            ?? throw new Exception("User not found");
 
         // Kullanıcı kimlik bilgilerini al
-        var credential = await _unitOfWork.UserCredentials
-            .GetSingleAsync(c => /* c.UserId == userId &&  */c.Email == email);
-
-        if (credential == null)
-            throw new Exception("User credentials not found");
+        var credential = await _unitOfWork.GetRepository<UserCredential>()
+            .GetSingleAsync(c => /* c.UserId == userId &&  */c.Email == email) 
+            ?? throw new Exception("User credentials not found");
 
         // Email doğrulaması yap
         if (!credential.IsEmailVerified)
@@ -281,7 +279,7 @@ public class AuthService : IAuthService
         credential.ModifiedBy = userId.ToString();
 
         // Değişiklikleri kaydet
-        await _unitOfWork.UserCredentials.UpdateAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().UpdateAsync(credential);
 
         // Başarılı
         return true;
@@ -289,10 +287,10 @@ public class AuthService : IAuthService
 
     public async Task<UserInfoDto> GetUserInfoAsync(Guid userId)
     {
-        return await (from user in _unitOfWork.Users.GetAll()
-            join person in _unitOfWork.Persons.GetAll()
+        return await (from user in _unitOfWork.GetRepository<User>().GetAll()
+            join person in _unitOfWork.GetRepository<Person>().GetAll()
                 on user.PersonId equals person.Id
-            join credential in _unitOfWork.UserCredentials.GetAll()
+            join credential in _unitOfWork.GetRepository<UserCredential>().GetAll()
                 on user.Id equals credential.UserId
             where user.Id == userId
             select new UserInfoDto
@@ -308,7 +306,7 @@ public class AuthService : IAuthService
     public async Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request)
     {
         // Email ve username kontrolü
-        var existingCredential = await _unitOfWork.UserCredentials
+        var existingCredential = await _unitOfWork.GetRepository<UserCredential>()
             .GetWhere(u => u.Email == request.Email || u.Username == request.Username)
             .FirstOrDefaultAsync();
 
@@ -323,7 +321,8 @@ public class AuthService : IAuthService
 
         // Şifre hash'leme
         var (passwordHash, passwordSalt) = CreatePasswordHash(request.Password);
-        var nationality = await _unitOfWork.Nationalities.GetSingleAsync(n => n.IsLocal);
+        var nationality = await _unitOfWork.GetRepository<Nationality>()
+            .GetSingleAsync(n => n.IsLocal);
         // Person oluşturma
         var person = new Person
         {
@@ -334,7 +333,7 @@ public class AuthService : IAuthService
             CreatedBy = "System",
             NationalityId = nationality?.Id
         };
-        await _unitOfWork.Persons.AddAsync(person);
+        await _unitOfWork.GetRepository<Person>().AddAsync(person);
         await _unitOfWork.SaveChangesAsync(); // Person kaydını kaydet
 
         // User oluşturma
@@ -344,10 +343,10 @@ public class AuthService : IAuthService
             CreatedDate = DateTime.UtcNow,
             CreatedBy = "System"
         };
-        await _unitOfWork.Users.AddAsync(user);
+        await _unitOfWork.GetRepository<User>().AddAsync(user);
         await _unitOfWork.SaveChangesAsync(); // User kaydını kaydet
 
-        await _unitOfWork.Persons.UpdateAsync(person);
+        await _unitOfWork.GetRepository<Person>().UpdateAsync(person);
 
         // UserCredential oluşturma
         var credential = new UserCredential
@@ -361,7 +360,7 @@ public class AuthService : IAuthService
             CreatedDate = DateTime.UtcNow,
             CreatedBy = "System"
         };
-        await _unitOfWork.UserCredentials.AddAsync(credential);
+        await _unitOfWork.GetRepository<UserCredential>().AddAsync(credential);
 
         // JWT token oluştur
         var token = GenerateJwtToken(user);

@@ -2,6 +2,7 @@ using AutoMapper;
 using Wallet.Entities.EntityObjects;
 using Wallet.Services.DTOs.Person;
 using Wallet.Services.DTOs.AuditLog;
+using System.Linq;
 
 namespace Wallet.Services.Mapping;
 

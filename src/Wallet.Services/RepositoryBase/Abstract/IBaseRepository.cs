@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Wallet.Entities.Base.Abstract;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace Wallet.Services.RepositoryBase.Abstract;
 
@@ -35,4 +36,8 @@ public interface IBaseRepository<T> where T : class, IEntity
     Task BulkUpdateAsync(IEnumerable<T> entities);
     Task BulkDeleteAsync(IEnumerable<T> entities);
     Task BulkSoftDeleteAsync(IEnumerable<T> entities);
+
+    Task<List<T>> GetAllAsync(
+        Expression<Func<T, bool>>? predicate = null,
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null);
 } 

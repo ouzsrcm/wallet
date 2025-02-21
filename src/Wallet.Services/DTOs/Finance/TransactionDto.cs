@@ -1,6 +1,23 @@
 using Wallet.Entities.Enums;
 namespace Wallet.Services.DTOs.Finance;
 
+/// <summary>
+/// İşlem detaylarını içeren DTO
+/// </summary>
+/// <example>
+/// {
+///   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+///   "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+///   "categoryId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+///   "amount": 100.50,
+///   "description": "Market alışverişi",
+///   "type": 2,
+///   "paymentMethod": 1,
+///   "reference": "123456",
+///   "isRecurring": false,
+///   "recurringPeriod": null
+/// }
+/// </example>
 public class TransactionDto
 {
     public Guid Id { get; set; }
