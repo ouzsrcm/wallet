@@ -23,6 +23,7 @@ public class TransactionDto
     public Guid Id { get; set; }
     public Guid PersonId { get; set; }
     public Guid CategoryId { get; set; }
+    public string CategoryName { get; set; } = null!;
     public decimal Amount { get; set; }
     public string Currency { get; set; } = null!;
     public DateTime TransactionDate { get; set; }

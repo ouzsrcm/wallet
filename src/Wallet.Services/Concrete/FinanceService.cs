@@ -24,32 +24,65 @@ public class FinanceService : IFinanceService
     public async Task<CategoryDto> GetCategoryByIdAsync(Guid id)
     {
         var category = await _unitOfWork.GetRepository<Category>()
-            .GetWhere(c => c.Id == id && !c.IsDeleted)
-            .FirstOrDefaultAsync();
+            .GetAllAsync<CategoryDto>(
+                predicate: c => c.Id == id && !c.IsDeleted,
+                include: q => q
+                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                selector: c => new CategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description,
+                    Type = c.Type,
+                    Icon = c.Icon,
+                    Color = c.Color,
+                    ParentCategoryId = c.ParentCategoryId
+                });
 
-        if (category == null)
-            throw new NotFoundException("Category not found");
-
-        return _mapper.Map<CategoryDto>(category);
+        return category.FirstOrDefault() ?? throw new NotFoundException("Category not found");
     }
 
     public async Task<List<CategoryDto>> GetCategoriesAsync(bool includeDeleted = false)
     {
-        var query = _unitOfWork.GetRepository<Category>().GetAll();
-        if (!includeDeleted)
-            query = query.Where(c => !c.IsDeleted);
+        var query = await _unitOfWork.GetRepository<Category>()
+            .GetAllAsync<CategoryDto>(
+                predicate: c => !c.IsDeleted,
+                include: q => q
+                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                selector: c => new CategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description,
+                    Type = c.Type,
+                    Icon = c.Icon,
+                    Color = c.Color,
+                    ParentCategoryId = c.ParentCategoryId
+                });
 
-        var categories = await query.ToListAsync();
-        return _mapper.Map<List<CategoryDto>>(categories);
+        return query;
     }
 
     public async Task<List<CategoryDto>> GetCategoriesByTypeAsync(TransactionType type)
     {
         var categories = await _unitOfWork.GetRepository<Category>()
-            .GetWhere(c => c.Type == type && !c.IsDeleted)
-            .ToListAsync();
+            .GetAllAsync<CategoryDto>(
+                predicate: c => c.Type == type && !c.IsDeleted,
+                include: q => q
+                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                selector: c => new CategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description,
+                    Type = c.Type,
+                    Icon = c.Icon,
+                    Color = c.Color,
+                    ParentCategoryId = c.ParentCategoryId,
+                    IsSystem = c.IsSystem
+                });
 
-        return _mapper.Map<List<CategoryDto>>(categories);
+        return categories;
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(CategoryDto categoryDto)
@@ -81,22 +114,55 @@ public class FinanceService : IFinanceService
     public async Task<TransactionDto> GetTransactionByIdAsync(Guid id)
     {
         var transaction = await _unitOfWork.GetRepository<Transaction>()
-            .GetWhere(t => t.Id == id && !t.IsDeleted)
-            .FirstOrDefaultAsync();
+            .GetAllAsync<TransactionDto>(
+                predicate: t => t.Id == id && !t.IsDeleted,
+                include: q => q
+                    .Include(t => t.Category),
+                selector: t => new TransactionDto
+                {
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    Currency = t.Currency,
+                    TransactionDate = t.TransactionDate,
+                    Description = t.Description,
+                    Type = t.Type,
+                    PaymentMethod = t.PaymentMethod,
+                    Reference = t.Reference,
+                    IsRecurring = t.IsRecurring,
+                    RecurringPeriod = t.RecurringPeriod,
+                    CategoryId = t.CategoryId,
+                    CategoryName = t.Category.Name
+                });
 
-        if (transaction == null)
+        if (transaction == null || !transaction.Any())
             throw new NotFoundException("Transaction not found");
 
-        return _mapper.Map<TransactionDto>(transaction);
+        return transaction.FirstOrDefault() ?? throw new NotFoundException("Transaction not found");
     }
 
     public async Task<List<TransactionDto>> GetTransactionsAsync(Guid personId)
     {
         var transactions = await _unitOfWork.GetRepository<Transaction>()
-            .GetWhere(t => t.PersonId == personId && !t.IsDeleted)
-            .ToListAsync();
-
-        return _mapper.Map<List<TransactionDto>>(transactions);
+            .GetAllAsync<TransactionDto>(
+                predicate: t => t.PersonId == personId && !t.IsDeleted,
+                include: q => q
+                    .Include(t => t.Category),
+                selector: t => new TransactionDto
+                {
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    Currency = t.Currency,
+                    TransactionDate = t.TransactionDate,
+                    Description = t.Description,
+                    Type = t.Type,
+                    PaymentMethod = t.PaymentMethod,
+                    Reference = t.Reference,
+                    IsRecurring = t.IsRecurring,
+                    RecurringPeriod = t.RecurringPeriod,
+                    CategoryId = t.CategoryId,
+                    CategoryName = t.Category.Name
+                });
+        return transactions;
     }
 
     public async Task<TransactionDto> CreateTransactionAsync(TransactionDto transactionDto)
