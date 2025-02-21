@@ -14,6 +14,9 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using AutoMapper;
 using Wallet.Services.Mapping;
+using Wallet.DataLayer.Interceptors;
+using Wallet.Infrastructure.Services;
+using Wallet.Infrastructure.Abstract;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,12 +56,20 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Register Services
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPersonUnitOfWork, PersonUnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IPersonUnitOfWork, PersonUnitOfWork>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+
+// Audit interceptor'ı kaydet
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
 // API Versioning
 builder.Services.AddApiVersioning(options =>

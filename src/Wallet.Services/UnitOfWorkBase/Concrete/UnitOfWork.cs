@@ -28,6 +28,12 @@ public class UnitOfWork : IUnitOfWork
             {typeof(Nationality), new BaseRepository<Nationality>(_context)},
             {typeof(Message), new BaseRepository<Message>(_context)},
             {typeof(MessageAttachment), new BaseRepository<MessageAttachment>(_context)},
+            {typeof(AuditLog), new BaseRepository<AuditLog>(_context)},
+            {typeof(Transaction), new BaseRepository<Transaction>(_context)},
+            {typeof(Category), new BaseRepository<Category>(_context)},
+            {typeof(Receipt), new BaseRepository<Receipt>(_context)},
+            {typeof(ReceiptItem), new BaseRepository<ReceiptItem>(_context)},
+            {typeof(Language), new BaseRepository<Language>(_context)},
         };
     }
 

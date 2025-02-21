@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wallet.Services\Wallet.Services.csproj" />
+    <ProjectReference Include="..\Wallet.Infrastructure\Wallet.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project> 

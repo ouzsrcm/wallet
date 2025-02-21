@@ -1,14 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using Wallet.Entities.EntityObjects;
 using Wallet.DataLayer.Configurations;
+using Wallet.DataLayer.Interceptors;
 
 namespace Wallet.DataLayer.Context;
 
 public class WalletDbContext : DbContext
 {
-    public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options)
+    private readonly AuditSaveChangesInterceptor _auditInterceptor;
+
+    public WalletDbContext(
+        DbContextOptions<WalletDbContext> options,
+        AuditSaveChangesInterceptor auditInterceptor) 
+        : base(options)
     {
-        
+        _auditInterceptor = auditInterceptor;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.AddInterceptors(_auditInterceptor);
+        base.OnConfiguring(optionsBuilder);
     }
 
     public DbSet<User> Users { get; set; }
@@ -24,6 +36,7 @@ public class WalletDbContext : DbContext
     public DbSet<Receipt> Receipts { get; set; }
     public DbSet<ReceiptItem> ReceiptItems { get; set; }
     public DbSet<Language> Languages { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
