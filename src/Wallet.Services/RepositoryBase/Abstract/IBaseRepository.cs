@@ -37,7 +37,8 @@ public interface IBaseRepository<T> where T : class, IEntity
     Task BulkDeleteAsync(IEnumerable<T> entities);
     Task BulkSoftDeleteAsync(IEnumerable<T> entities);
 
-    Task<List<T>> GetAllAsync(
+    Task<List<TResult>> GetAllAsync<TResult>(
         Expression<Func<T, bool>>? predicate = null,
-        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null);
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+        Expression<Func<T, TResult>>? selector = null);
 } 

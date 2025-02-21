@@ -22,7 +22,7 @@ public interface IFinanceService
     Task DeleteTransactionAsync(Guid id);
 
     // Receipt operations
-    Task<ReceiptDto> GetAllReceiptsAsync(Guid id);
+    Task<List<ReceiptDto>> GetAllReceiptsAsync(Guid id);
     Task<ReceiptDto> GetReceiptByIdAsync(Guid id);
     Task<List<ReceiptDto>> GetReceiptsByTransactionIdAsync(Guid transactionId);
     Task<ReceiptDto> CreateReceiptAsync(ReceiptDto receiptDto);

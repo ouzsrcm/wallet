@@ -9,6 +9,9 @@ namespace Wallet.Api.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Produces("application/json")]
+[ApiVersion("1.0")]
+[Tags("Categories")]
 public class CategoriesController : ControllerBase
 {
     private readonly IFinanceService _financeService;

@@ -51,9 +51,10 @@ public class BaseRepository<T> : IBaseRepository<T> where T : SoftDeleteEntity
         return await query.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<List<T>> GetAllAsync(
+    public async Task<List<TResult>> GetAllAsync<TResult>(
         Expression<Func<T, bool>>? predicate = null,
-        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null)
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+        Expression<Func<T, TResult>>? selector = null)
     {
         IQueryable<T> query = _dbSet;
         
@@ -62,8 +63,11 @@ public class BaseRepository<T> : IBaseRepository<T> where T : SoftDeleteEntity
         
         if (predicate != null)
             query = query.Where(predicate);
+
+        if (selector != null)
+            return await query.Select(selector).ToListAsync();
         
-        return await query.ToListAsync();
+        return await query.Select(x => (TResult)(object)x).ToListAsync();
     }
 
     // Insert Methods

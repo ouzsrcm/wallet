@@ -220,34 +220,59 @@ public class FinanceService : IFinanceService
         await _unitOfWork.GetRepository<ReceiptItem>().SoftDeleteAsync(receiptItem);
     }
 
-    public async Task<ReceiptDto> GetAllReceiptsAsync(Guid userId)
+    public async Task<List<ReceiptDto>> GetAllReceiptsAsync(Guid userId)
     {
         var receipts = await _unitOfWork.GetRepository<Receipt>()
-            .GetAllAsync(
+            .GetAllAsync<ReceiptDto>(
                 predicate: r => r.Transaction.PersonId == userId && !r.IsDeleted,
                 include: q => q
                     .Include(r => r.Transaction)
-                    .Include(r => r.Items)
+                    .Include(r => r.Items),
+                    selector: r => new ReceiptDto
+                    {
+                        Id = r.Id,
+                        TransactionId = r.TransactionId,
+                        Items = r.Items.Select(i => new ReceiptItemDto
+                        {
+                            Id = i.Id,
+                            ReceiptId = i.ReceiptId,
+                            Quantity = i.Quantity,
+                            UnitPrice = i.UnitPrice,
+                            TotalPrice = i.TotalPrice,
+                            ProductName = i.ProductName,
+                            Barcode = i.Barcode,
+                            Unit = i.Unit,
+                            TaxRate = i.TaxRate,
+                            TaxAmount = i.TaxAmount
+                        }).ToList()
+                    }
             );
 
         if (receipts == null)
             throw new NotFoundException($"User {userId} has no receipts");
 
-        return _mapper.Map<ReceiptDto>(receipts);
+        return receipts;
     }
 
     public async Task<List<CategoryDto>> GetAllCategoriesAsync()
     {
         var categories = await _unitOfWork.GetRepository<Category>()
-            .GetAllAsync(
+            .GetAllAsync<CategoryDto>(
                 predicate: c => !c.IsDeleted,
                 include: q => q
-                    .Include(c => c.Transactions.Where(t => !t.IsDeleted))
+                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                    selector: c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                        Type = c.Type
+                    }
             );
 
         if (categories == null || !categories.Any())
             throw new NotFoundException("No categories found");
 
-        return _mapper.Map<List<CategoryDto>>(categories);
+        return categories;
     }
-} 
+}
