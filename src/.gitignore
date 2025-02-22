@@ -1,6 +1,7 @@
 # .NET Core build folders
 bin/
 obj/
+publish/
 
 # Dependencies
 node_modules

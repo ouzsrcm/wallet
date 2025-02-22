@@ -150,14 +150,25 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || true)
 {
     app.UseDeveloperExceptionPage();
-    app.UseSwagger();
+    app.UseSwagger(c =>
+    {
+        c.RouteTemplate = "api-docs/{documentName}/swagger.json";
+        c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+        {
+            // IIS'de çalışırken doğru URL'yi oluştur
+            var serverUrl = $"{httpReq.Scheme}://{httpReq.Host.Value}";
+            swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = serverUrl } };
+        });
+    });
+    
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Wallet API V1");
-        c.RoutePrefix = string.Empty;
+        c.SwaggerEndpoint("v1/swagger.json", "Wallet API V1");
+        c.RoutePrefix = "api-docs";
+        c.EnableTryItOutByDefault();
     });
 }
 
@@ -173,5 +184,11 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
+
+// Swagger endpoint'lerini auth'dan muaf tut
+app.MapGet("/api-docs/swagger.json", () => Results.StatusCode(200))
+    .AllowAnonymous();
+app.MapGet("/api-docs/{**catch-all}", () => Results.StatusCode(200))
+    .AllowAnonymous();
 
 app.Run(); 
