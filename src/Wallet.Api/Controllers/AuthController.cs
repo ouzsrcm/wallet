@@ -20,10 +20,14 @@ namespace Wallet.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService)
+    public AuthController(
+        IAuthService authService, 
+        ILogger<AuthController> logger)
     {
         _authService = authService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -50,12 +54,24 @@ public class AuthController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Login attempt for user: {Username}", request.Username);
+            
             var response = await _authService.LoginAsync(request);
+            
+            _logger.LogInformation("User {Username} logged in successfully", request.Username);
             return Ok(response);
+        }
+        catch (BadRequestException ex)
+        {
+            _logger.LogWarning(ex, "Login failed for user {Username}: {Message}", 
+                request.Username, ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            _logger.LogError(ex, "Unexpected error during login for user {Username}", 
+                request.Username);
+            return StatusCode(500, new { message = "Giriş işlemi sırasında bir hata oluştu" });
         }
     }
 
@@ -81,11 +97,17 @@ public class AuthController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Token refresh attempt");
+            
             var response = await _authService.RefreshTokenAsync(refreshToken);
+            
+            _logger.LogInformation("Token refreshed successfully for user {UserId}", 
+                response.User.Id);
             return Ok(response);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error refreshing token");
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -105,11 +127,16 @@ public class AuthController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Logout attempt for user {UserId}", userId);
+            
             await _authService.LogoutAsync(userId);
+            
+            _logger.LogInformation("User {UserId} logged out successfully", userId);
             return Ok(new { message = "Logged out successfully" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error during logout");
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -144,6 +171,8 @@ public class AuthController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Password change attempt for user {UserId}", userId);
+            
             var result = await _authService.ChangePasswordAsync(
                 userId, 
                 request.Email,
@@ -151,6 +180,7 @@ public class AuthController : ControllerBase
                 request.NewPassword
             );
 
+            _logger.LogInformation("Password changed successfully for user {UserId}", userId);
             return Ok(new { 
                 success = true,
                 message = "Password changed successfully",
@@ -161,6 +191,9 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error changing password for user {UserId}", 
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                
             var statusCode = ex.Message switch
             {
                 "User not found" => StatusCodes.Status404NotFound,
@@ -211,15 +244,23 @@ public class AuthController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Registration attempt for user: {Username}", request.Username);
+            
             var response = await _authService.RegisterAsync(request);
+            
+            _logger.LogInformation("User {Username} registered successfully", request.Username);
             return Ok(response);
         }
         catch (BadRequestException ex)
         {
+            _logger.LogWarning(ex, "Registration failed for user {Username}: {Message}", 
+                request.Username, ex.Message);
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error during registration for user {Username}", 
+                request.Username);
             return StatusCode(500, new { message = "Kayıt işlemi sırasında bir hata oluştu" });
         }
     }

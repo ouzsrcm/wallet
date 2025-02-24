@@ -6,6 +6,7 @@ namespace Wallet.Services.Abstract;
 public interface IFinanceService
 {
     // Category operations
+    Task<List<CategoryDto>> GetAllCategoriesAsync();
     Task<CategoryDto> GetCategoryByIdAsync(Guid id);
     Task<List<CategoryDto>> GetCategoriesAsync(bool includeDeleted = false);
     Task<List<CategoryDto>> GetCategoriesByTypeAsync(TransactionType type);
@@ -21,6 +22,7 @@ public interface IFinanceService
     Task DeleteTransactionAsync(Guid id);
 
     // Receipt operations
+    Task<List<ReceiptDto>> GetAllReceiptsAsync(Guid id);
     Task<ReceiptDto> GetReceiptByIdAsync(Guid id);
     Task<List<ReceiptDto>> GetReceiptsByTransactionIdAsync(Guid transactionId);
     Task<ReceiptDto> CreateReceiptAsync(ReceiptDto receiptDto);

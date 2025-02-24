@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Wallet.Services.DTOs.Auth;
 using Wallet.Services.Abstract;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Wallet.Services.Exceptions;
 
 namespace Wallet.Api.Controllers;
 
@@ -23,15 +25,18 @@ public class MessagesController : ControllerBase
     private readonly IMessageService _messageService;
     private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<MessagesController> _logger;
 
     public MessagesController(
         IMessageService messageService,
         IAuthService authService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<MessagesController> logger)
     {
         _messageService = messageService;
         _authService = authService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     /// <summary>
@@ -62,6 +67,8 @@ public class MessagesController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Sending message from user {UserId} to {ReceiverUsername}", 
+                userId, messageDto.ReceiverUsername);
 
             if (messageDto.Attachment != null)
             {
@@ -75,11 +82,18 @@ public class MessagesController : ControllerBase
             }
 
             var message = await _messageService.SendMessageAsync(userId, messageDto);
+            _logger.LogInformation("Message {MessageId} sent successfully", message.Id);
             return Ok(message);
+        }
+        catch (BadRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to send message: {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            _logger.LogError(ex, "Error sending message");
+            return StatusCode(500, new { message = "Mesaj gönderilirken bir hata oluştu" });
         }
     }
 
@@ -98,9 +112,22 @@ public class MessagesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<MessageDto>>> GetInboxMessages()
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var messages = await _messageService.GetInboxMessagesAsync(userId);
-        return Ok(messages);
+        try
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Getting inbox messages for user {UserId}", userId);
+            
+            var messages = await _messageService.GetInboxMessagesAsync(userId);
+            
+            _logger.LogInformation("Retrieved {Count} inbox messages for user {UserId}", 
+                messages.Count, userId);
+            return Ok(messages);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting inbox messages");
+            return StatusCode(500, new { message = "Gelen kutusu mesajları getirilirken bir hata oluştu" });
+        }
     }
 
     /// <summary>
@@ -116,9 +143,22 @@ public class MessagesController : ControllerBase
     [ProducesResponseType(typeof(List<MessageDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<MessageDto>>> GetSentMessages()
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var messages = await _messageService.GetSentMessagesAsync(userId);
-        return Ok(messages);
+        try
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Getting sent messages for user {UserId}", userId);
+            
+            var messages = await _messageService.GetSentMessagesAsync(userId);
+            
+            _logger.LogInformation("Retrieved {Count} sent messages for user {UserId}", 
+                messages.Count, userId);
+            return Ok(messages);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting sent messages");
+            return StatusCode(500, new { message = "Gönderilen mesajlar getirilirken bir hata oluştu" });
+        }
     }
 
     /// <summary>
@@ -139,12 +179,22 @@ public class MessagesController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Getting message {MessageId} for user {UserId}", id, userId);
+            
             var message = await _messageService.GetMessageByIdAsync(id, userId);
+            if (message == null)
+            {
+                _logger.LogWarning("Message {MessageId} not found", id);
+                return NotFound();
+            }
+            
+            _logger.LogInformation("Retrieved message {MessageId}", id);
             return Ok(message);
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error getting message {MessageId}", id);
+            return StatusCode(500, new { message = "Mesaj getirilirken bir hata oluştu" });
         }
     }
 
@@ -193,12 +243,23 @@ public class MessagesController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Marking message {MessageId} as read for user {UserId}", 
+                id, userId);
+            
             await _messageService.MarkAsReadAsync(id, userId);
-            return Ok(new { message = "Message marked as read" });
+            
+            _logger.LogInformation("Message {MessageId} marked as read", id);
+            return Ok();
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Message {MessageId} not found", id);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error marking message {MessageId} as read", id);
+            return StatusCode(500, new { message = "Mesaj okundu olarak işaretlenirken bir hata oluştu" });
         }
     }
 
@@ -247,12 +308,23 @@ public class MessagesController : ControllerBase
         try
         {
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            _logger.LogInformation("Deleting message {MessageId} for user {UserId}", 
+                id, userId);
+            
             await _messageService.DeleteMessageAsync(id, userId);
-            return Ok(new { message = "Message deleted" });
+            
+            _logger.LogInformation("Message {MessageId} deleted successfully", id);
+            return Ok();
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Message {MessageId} not found for deletion", id);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error deleting message {MessageId}", id);
+            return StatusCode(500, new { message = "Mesaj silinirken bir hata oluştu" });
         }
     }
 

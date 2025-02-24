@@ -21,7 +21,7 @@ public class PersonService : IPersonService
 
     public async Task<PersonDto> GetPersonByIdAsync(Guid id)
     {
-        var person = await _unitOfWork.Persons
+        var person = await _unitOfWork.GetRepository<Person>()
             .GetWhere(p => p.Id == id)
             .Select(p => new PersonDto
             {
@@ -46,32 +46,32 @@ public class PersonService : IPersonService
     public async Task<PersonDto> CreatePersonAsync(PersonDto personDto)
     {
         var person = _mapper.Map<Person>(personDto);
-        await _unitOfWork.Persons.AddAsync(person);
+        await _unitOfWork.GetRepository<Person>().AddAsync(person);
         return _mapper.Map<PersonDto>(person);
     }
 
     public async Task<PersonDto> UpdatePersonAsync(Guid id, PersonDto personDto)
     {
-        var person = await _unitOfWork.Persons.GetByIdAsync(id)
+        var person = await _unitOfWork.GetRepository<Person>().GetByIdAsync(id)
             ?? throw new Exception("Person not found");
 
         _mapper.Map(personDto, person);
-        await _unitOfWork.Persons.UpdateAsync(person);
+        await _unitOfWork.GetRepository<Person>().UpdateAsync(person);
         return _mapper.Map<PersonDto>(person);
     }
 
     public async Task DeletePersonAsync(Guid id)
     {
-        var person = await _unitOfWork.Persons.GetByIdAsync(id)
+        var person = await _unitOfWork.GetRepository<Person>().GetByIdAsync(id)
             ?? throw new Exception("Person not found");
 
-        await _unitOfWork.Persons.SoftDeleteAsync(person);
+        await _unitOfWork.GetRepository<Person>().SoftDeleteAsync(person);
     }
 
     // Address operations
     public async Task<PersonAddressDto> AddAddressAsync(Guid personId, PersonAddressDto addressDto)
     {
-        var person = await _unitOfWork.Persons.GetByIdAsync(personId)
+        var person = await _unitOfWork.GetRepository<Person>().GetByIdAsync(personId)
             ?? throw new Exception("Person not found");
 
         var address = _mapper.Map<PersonAddress>(addressDto);
@@ -86,24 +86,24 @@ public class PersonService : IPersonService
         if (address.IsDefault)
         {
             // Diğer varsayılan adresleri güncelle
-            var defaultAddresses = await _unitOfWork.PersonAddresses
+            var defaultAddresses = await _unitOfWork.GetRepository<PersonAddress>()
                 .GetWhere(a => a.PersonId == personId && a.IsDefault)
                 .ToListAsync();
 
             foreach (var defaultAddress in defaultAddresses)
             {
                 defaultAddress.IsDefault = false;
-                await _unitOfWork.PersonAddresses.UpdateAsync(defaultAddress);
+                await _unitOfWork.GetRepository<PersonAddress>().UpdateAsync(defaultAddress);
             }
         }
 
-        await _unitOfWork.PersonAddresses.AddAsync(address);
+        await _unitOfWork.GetRepository<PersonAddress>().AddAsync(address);
         return _mapper.Map<PersonAddressDto>(address);
     }
 
     public async Task<PersonAddressDto> UpdateAddressAsync(Guid addressId, PersonAddressDto addressDto)
     {
-        var address = await _unitOfWork.PersonAddresses.GetByIdAsync(addressId)
+        var address = await _unitOfWork.GetRepository<PersonAddress>().GetByIdAsync(addressId)
             ?? throw new NotFoundException("Address not found");
 
         // ID'yi güncelleme, sadece diğer özellikleri güncelle
@@ -118,43 +118,43 @@ public class PersonService : IPersonService
         address.PostalCode = addressDto.PostalCode;
         address.IsDefault = addressDto.IsDefault;
 
-        await _unitOfWork.PersonAddresses.UpdateAsync(address);
+        await _unitOfWork.GetRepository<PersonAddress>().UpdateAsync(address);
         return _mapper.Map<PersonAddressDto>(address);
     }
 
     public async Task DeleteAddressAsync(Guid addressId)
     {
-        var address = await _unitOfWork.PersonAddresses.GetByIdAsync(addressId)
+        var address = await _unitOfWork.GetRepository<PersonAddress>().GetByIdAsync(addressId)
             ?? throw new Exception("Address not found");
 
-        await _unitOfWork.PersonAddresses.SoftDeleteAsync(address);
+        await _unitOfWork.GetRepository<PersonAddress>().SoftDeleteAsync(address);
     }
 
     public async Task<PersonAddressDto> SetDefaultAddressAsync(Guid addressId)
     {
-        var address = await _unitOfWork.PersonAddresses.GetByIdAsync(addressId)
+        var address = await _unitOfWork.GetRepository<PersonAddress>().GetByIdAsync(addressId)
             ?? throw new Exception("Address not found");
 
         // Diğer varsayılan adresleri güncelle
-        var defaultAddresses = await _unitOfWork.PersonAddresses
+        var defaultAddresses = await _unitOfWork.GetRepository<PersonAddress>()
             .GetWhere(a => a.PersonId == address.PersonId && a.IsDefault)
             .ToListAsync();
 
         foreach (var defaultAddress in defaultAddresses)
         {
             defaultAddress.IsDefault = false;
-            await _unitOfWork.PersonAddresses.UpdateAsync(defaultAddress);
+            await _unitOfWork.GetRepository<PersonAddress>().UpdateAsync(defaultAddress);
         }
 
         address.IsDefault = true;
-        await _unitOfWork.PersonAddresses.UpdateAsync(address);
+        await _unitOfWork.GetRepository<PersonAddress>().UpdateAsync(address);
         return _mapper.Map<PersonAddressDto>(address);
     }
 
     // Contact operations
     public async Task<PersonContactDto> AddContactAsync(Guid personId, PersonContactDto contactDto)
     {
-        var person = await _unitOfWork.Persons.GetByIdAsync(personId)
+        var person = await _unitOfWork.GetRepository<Person>().GetByIdAsync(personId)
             ?? throw new Exception("Person not found");
 
         var contact = _mapper.Map<PersonContact>(contactDto);
@@ -163,7 +163,7 @@ public class PersonService : IPersonService
         if (contact.IsDefault || contact.IsPrimary)
         {
             // Diğer varsayılan/birincil kişileri güncelle
-            var existingContacts = await _unitOfWork.PersonContacts
+            var existingContacts = await _unitOfWork.GetRepository<PersonContact>()
                 .GetWhere(c => c.PersonId == personId &&
                               (c.IsDefault || c.IsPrimary) &&
                               c.ContactType == contact.ContactType)
@@ -173,17 +173,17 @@ public class PersonService : IPersonService
             {
                 if (contact.IsDefault) existingContact.IsDefault = false;
                 if (contact.IsPrimary) existingContact.IsPrimary = false;
-                await _unitOfWork.PersonContacts.UpdateAsync(existingContact);
+                await _unitOfWork.GetRepository<PersonContact>().UpdateAsync(existingContact);
             }
         }
 
-        await _unitOfWork.PersonContacts.AddAsync(contact);
+        await _unitOfWork.GetRepository<PersonContact>().AddAsync(contact);
         return _mapper.Map<PersonContactDto>(contact);
     }
 
     public async Task<PersonContactDto> UpdateContactAsync(Guid contactId, PersonContactDto contactDto)
     {
-        var contact = await _unitOfWork.PersonContacts.GetByIdAsync(contactId)
+        var contact = await _unitOfWork.GetRepository<PersonContact>().GetByIdAsync(contactId)
             ?? throw new NotFoundException("Contact not found");
 
         // ID'yi güncelleme, sadece diğer özellikleri güncelle
@@ -195,25 +195,25 @@ public class PersonService : IPersonService
         contact.IsDefault = contactDto.IsDefault;
         contact.IsPrimary = contactDto.IsPrimary;
 
-        await _unitOfWork.PersonContacts.UpdateAsync(contact);
+        await _unitOfWork.GetRepository<PersonContact>().UpdateAsync(contact);
         return _mapper.Map<PersonContactDto>(contact);
     }
 
     public async Task DeleteContactAsync(Guid contactId)
     {
-        var contact = await _unitOfWork.PersonContacts.GetByIdAsync(contactId)
+        var contact = await _unitOfWork.GetRepository<PersonContact>().GetByIdAsync(contactId)
             ?? throw new Exception("Contact not found");
 
-        await _unitOfWork.PersonContacts.SoftDeleteAsync(contact);
+        await _unitOfWork.GetRepository<PersonContact>().SoftDeleteAsync(contact);
     }
 
     public async Task<PersonContactDto> SetDefaultContactAsync(Guid contactId)
     {
-        var contact = await _unitOfWork.PersonContacts.GetByIdAsync(contactId)
+        var contact = await _unitOfWork.GetRepository<PersonContact>().GetByIdAsync(contactId)
             ?? throw new Exception("Contact not found");
 
         // Diğer varsayılan kişileri güncelle
-        var defaultContacts = await _unitOfWork.PersonContacts
+        var defaultContacts = await _unitOfWork.GetRepository<PersonContact>()
             .GetWhere(c => c.PersonId == contact.PersonId &&
                           c.IsDefault &&
                           c.ContactType == contact.ContactType)
@@ -222,17 +222,17 @@ public class PersonService : IPersonService
         foreach (var defaultContact in defaultContacts)
         {
             defaultContact.IsDefault = false;
-            await _unitOfWork.PersonContacts.UpdateAsync(defaultContact);
+            await _unitOfWork.GetRepository<PersonContact>().UpdateAsync(defaultContact);
         }
 
         contact.IsDefault = true;
-        await _unitOfWork.PersonContacts.UpdateAsync(contact);
+        await _unitOfWork.GetRepository<PersonContact>().UpdateAsync(contact);
         return _mapper.Map<PersonContactDto>(contact);
     }
 
     public async Task<List<PersonContactDto>> GetPersonContactsAsync(Guid personId)
     {
-        var contacts = await _unitOfWork.PersonContacts
+        var contacts = await _unitOfWork.GetRepository<PersonContact>()
             .GetWhere(c => c.PersonId == personId && !c.IsDeleted)
             .Select(c => new PersonContactDto
             {
@@ -254,7 +254,7 @@ public class PersonService : IPersonService
     public async Task<List<PersonAddressDto>> GetPersonAddressesAsync(Guid personId)
     {
         // Sadece gerekli alanları seç ve tek sorguda getir
-        var addresses = await _unitOfWork.PersonAddresses
+        var addresses = await _unitOfWork.GetRepository<PersonAddress>()
             .GetWhere(a => a.PersonId == personId && !a.IsDeleted)
             .Select(a => new PersonAddressDto
             {

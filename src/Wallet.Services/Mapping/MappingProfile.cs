@@ -2,6 +2,8 @@ using AutoMapper;
 using Wallet.Entities.EntityObjects;
 using Wallet.Services.DTOs.Person;
 using Wallet.Services.DTOs.AuditLog;
+using Wallet.Services.DTOs.Finance;
+
 
 namespace Wallet.Services.Mapping;
 
@@ -14,5 +16,10 @@ public class MappingProfile : Profile
         CreateMap<PersonContact, PersonContactDto>().ReverseMap();
         CreateMap<AuditLog, AuditLogDto>().ReverseMap();
         CreateMap<CreateAuditLogDto, AuditLog>();
+        CreateMap<Category, CategoryDto>().ReverseMap();
+        CreateMap<Transaction, TransactionDto>().ReverseMap();
+        CreateMap<Receipt, ReceiptDto>().ReverseMap();
+        CreateMap<ReceiptItem, ReceiptItemDto>().ReverseMap();
+        
     }
 } 

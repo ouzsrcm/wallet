@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Wallet.DataLayer.Context;
 using Wallet.Entities.Base.Concrete;
 using Wallet.Services.RepositoryBase.Abstract;
@@ -48,6 +49,25 @@ public class BaseRepository<T> : IBaseRepository<T> where T : SoftDeleteEntity
         if (!tracking)
             query = query.AsNoTracking();
         return await query.FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<List<TResult>> GetAllAsync<TResult>(
+        Expression<Func<T, bool>>? predicate = null,
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+        Expression<Func<T, TResult>>? selector = null)
+    {
+        IQueryable<T> query = _dbSet;
+        
+        if (include != null)
+            query = include(query);
+        
+        if (predicate != null)
+            query = query.Where(predicate);
+
+        if (selector != null)
+            return await query.Select(selector).ToListAsync();
+        
+        return await query.Select(x => (TResult)(object)x).ToListAsync();
     }
 
     // Insert Methods

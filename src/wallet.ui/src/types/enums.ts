@@ -15,3 +15,9 @@ export enum LanguageProficiency {
     Intermediate = 2,
     Advanced = 3,
 } 
+
+export interface TransactionType {
+    id: number,
+    name: string,
+    title: string
+}

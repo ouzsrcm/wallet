@@ -27,7 +27,7 @@ public class MessageService : IMessageService
     public async Task<MessageDto> SendMessageAsync(Guid senderId, SendMessageDto messageDto)
     {
         // Alıcıyı bul
-        var receiver = await _unitOfWork.Users
+        var receiver = await _unitOfWork.GetRepository<User>()
             .GetWhere(u => u.Credential!.Username == messageDto.ReceiverUsername)
             .FirstOrDefaultAsync() 
             ?? throw new Exception("Receiver not found");
@@ -42,7 +42,7 @@ public class MessageService : IMessageService
             CreatedBy = senderId.ToString()
         };
 
-        await _unitOfWork.Messages.AddAsync(message);
+        await _unitOfWork.GetRepository<Message>().AddAsync(message);
         await _unitOfWork.SaveChangesAsync();
 
         // Eğer dosya eki varsa kaydet
@@ -63,7 +63,7 @@ public class MessageService : IMessageService
                 CreatedBy = senderId.ToString()
             };
 
-            await _unitOfWork.MessageAttachments.AddAsync(attachment);
+            await _unitOfWork.GetRepository<MessageAttachment>().AddAsync(attachment);
             await _unitOfWork.SaveChangesAsync();
         }
 
@@ -72,12 +72,12 @@ public class MessageService : IMessageService
 
     public async Task<MessageDto> GetMessageByIdAsync(Guid messageId, Guid userId)
     {
-        var message = await (from msg in _unitOfWork.Messages.GetAll()
-            join sender in _unitOfWork.Users.GetAll() 
+        var message = await (from msg in _unitOfWork.GetRepository<Message>().GetAll()
+            join sender in _unitOfWork.GetRepository<User>().GetAll() 
                 on msg.SenderId equals sender.Id
-            join receiver in _unitOfWork.Users.GetAll() 
+            join receiver in _unitOfWork.GetRepository<User>().GetAll() 
                 on msg.ReceiverId equals receiver.Id
-            join senderCred in _unitOfWork.UserCredentials.GetAll()
+            join senderCred in _unitOfWork.GetRepository<UserCredential>().GetAll()
                 on sender.Id equals senderCred.UserId
             where msg.Id == messageId && 
                   (msg.SenderId == userId || msg.ReceiverId == userId)
@@ -108,12 +108,12 @@ public class MessageService : IMessageService
 
     public async Task<List<MessageDto>> GetInboxMessagesAsync(Guid userId)
     {
-        return await (from message in _unitOfWork.Messages.GetAll()
-            join sender in _unitOfWork.Users.GetAll() 
+        return await (from message in _unitOfWork.GetRepository<Message>().GetAll()
+            join sender in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.SenderId equals sender.Id
-            join receiver in _unitOfWork.Users.GetAll() 
+            join receiver in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.ReceiverId equals receiver.Id
-            join senderCred in _unitOfWork.UserCredentials.GetAll()
+            join senderCred in _unitOfWork.GetRepository<UserCredential>().GetAll()
                 on sender.Id equals senderCred.UserId
             where message.ReceiverId == userId && !message.IsDeleted
             orderby message.CreatedDate descending
@@ -136,12 +136,12 @@ public class MessageService : IMessageService
 
     public async Task<List<MessageDto>> GetSentMessagesAsync(Guid userId)
     {
-        return await (from message in _unitOfWork.Messages.GetAll()
-            join sender in _unitOfWork.Users.GetAll() 
+        return await (from message in _unitOfWork.GetRepository<Message>().GetAll()
+            join sender in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.SenderId equals sender.Id
-            join receiver in _unitOfWork.Users.GetAll() 
+            join receiver in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.ReceiverId equals receiver.Id
-            join senderCred in _unitOfWork.UserCredentials.GetAll()
+            join senderCred in _unitOfWork.GetRepository<UserCredential>().GetAll()
                 on sender.Id equals senderCred.UserId
             where message.SenderId == userId && !message.IsDeleted
             orderby message.CreatedDate descending
@@ -164,10 +164,10 @@ public class MessageService : IMessageService
 
     public async Task<List<MessageDto>> GetMessageThreadAsync(Guid messageId)
     {
-        return await (from message in _unitOfWork.Messages.GetAll()
-            join sender in _unitOfWork.Users.GetAll() 
+        return await (from message in _unitOfWork.GetRepository<Message>().GetAll()
+            join sender in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.SenderId equals sender.Id
-            join receiver in _unitOfWork.Users.GetAll() 
+            join receiver in _unitOfWork.GetRepository<User>().GetAll() 
                 on message.ReceiverId equals receiver.Id
             where message.ParentMessageId == messageId || message.Id == messageId
             orderby message.CreatedDate
@@ -189,7 +189,7 @@ public class MessageService : IMessageService
 
     public async Task MarkAsReadAsync(Guid messageId, Guid userId)
     {
-        var message = await _unitOfWork.Messages
+        var message = await _unitOfWork.GetRepository<Message>()
             .GetWhere(m => m.Id == messageId && m.ReceiverId == userId)
             .FirstOrDefaultAsync()
             ?? throw new Exception("Message not found");
@@ -199,13 +199,13 @@ public class MessageService : IMessageService
         message.ModifiedBy = userId.ToString();
         message.ModifiedDate = DateTime.UtcNow;
 
-        await _unitOfWork.Messages.UpdateAsync(message);
+        await _unitOfWork.GetRepository<Message>().UpdateAsync(message);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task MarkAsUnreadAsync(Guid messageId, Guid userId)
     {
-        var message = await _unitOfWork.Messages
+        var message = await _unitOfWork.GetRepository<Message>()
             .GetWhere(m => m.Id == messageId && m.ReceiverId == userId)
             .FirstOrDefaultAsync()
             ?? throw new Exception("Message not found");
@@ -215,25 +215,25 @@ public class MessageService : IMessageService
         message.ModifiedBy = userId.ToString();
         message.ModifiedDate = DateTime.UtcNow;
 
-        await _unitOfWork.Messages.UpdateAsync(message);
+        await _unitOfWork.GetRepository<Message>().UpdateAsync(message);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteMessageAsync(Guid messageId, Guid userId)
     {
-        var message = await _unitOfWork.Messages
+        var message = await _unitOfWork.GetRepository<Message>()
             .GetWhere(m => m.Id == messageId && 
                           (m.SenderId == userId || m.ReceiverId == userId))
             .FirstOrDefaultAsync()
             ?? throw new Exception("Message not found");
 
-        await _unitOfWork.Messages.SoftDeleteAsync(message);
+        await _unitOfWork.GetRepository<Message>().SoftDeleteAsync(message);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteThreadAsync(Guid messageId, Guid userId)
     {
-        var messages = await _unitOfWork.Messages
+        var messages = await _unitOfWork.GetRepository<Message>()
             .GetWhere(m => (m.ParentMessageId == messageId || m.Id == messageId) &&
                           (m.SenderId == userId || m.ReceiverId == userId))
             .ToListAsync();
@@ -255,10 +255,10 @@ public class MessageService : IMessageService
 
     public async Task<List<UserInfoDto>> GetAllUsersAsync()
     {
-        return await (from user in _unitOfWork.Users.GetAll()
-            join person in _unitOfWork.Persons.GetAll()
+        return await (from user in _unitOfWork.GetRepository<User>().GetAll()
+            join person in _unitOfWork.GetRepository<Person>().GetAll()
                 on user.PersonId equals person.Id
-            join credential in _unitOfWork.UserCredentials.GetAll()
+            join credential in _unitOfWork.GetRepository<UserCredential>().GetAll()
                 on user.Id equals credential.UserId
             where !user.IsDeleted
             select new UserInfoDto
@@ -272,7 +272,7 @@ public class MessageService : IMessageService
 
     public async Task<MessageAttachmentDto> UploadAttachmentAsync(Guid messageId, IFormFile file)
     {
-        var message = await _unitOfWork.Messages
+        var message = await _unitOfWork.GetRepository<Message>()
             .GetByIdAsync(messageId) 
             ?? throw new Exception("Message not found");
 
@@ -302,7 +302,7 @@ public class MessageService : IMessageService
             CreatedBy = message.SenderId.ToString()
         };
 
-        await _unitOfWork.MessageAttachments.AddAsync(attachment);
+        await _unitOfWork.GetRepository<MessageAttachment>().AddAsync(attachment);
         await _unitOfWork.SaveChangesAsync();
 
         return new MessageAttachmentDto
@@ -317,7 +317,7 @@ public class MessageService : IMessageService
     public async Task<List<MessageAttachmentDto>> GetMessageAttachmentsAsync(Guid messageId, Guid userId)
     {
         // Önce mesajı kontrol et
-        var message = await _unitOfWork.Messages
+        var message = await _unitOfWork.GetRepository<Message>()
             .GetByIdAsync(messageId) 
             ?? throw new Exception("Message not found");
 
@@ -326,7 +326,7 @@ public class MessageService : IMessageService
             throw new UnauthorizedAccessException("You don't have permission to access this message");
 
         // Ekleri getir
-        return await (from a in _unitOfWork.MessageAttachments.GetAll()
+        return await (from a in _unitOfWork.GetRepository<MessageAttachment>().GetAll()
             where a.MessageId == messageId && !a.IsDeleted
             select new MessageAttachmentDto
             {
@@ -340,7 +340,7 @@ public class MessageService : IMessageService
     public async Task<(byte[] FileContents, string FileName, string ContentType)> DownloadAttachmentAsync(Guid attachmentId)
     {
         // Eki bul
-        var attachment = await _unitOfWork.MessageAttachments
+        var attachment = await _unitOfWork.GetRepository<MessageAttachment>()
             .GetByIdAsync(attachmentId) 
             ?? throw new Exception("Attachment not found");
 
@@ -356,8 +356,8 @@ public class MessageService : IMessageService
     public async Task<(byte[] FileContents, string FileName, string ContentType)> GetAttachmentByIdAsync(Guid attachmentId, Guid userId)
     {
         // Eki ve ilgili mesaj bilgilerini tek sorguda getir
-        var attachment = await (from a in _unitOfWork.MessageAttachments.GetAll()
-            join m in _unitOfWork.Messages.GetAll() 
+        var attachment = await (from a in _unitOfWork.GetRepository<MessageAttachment>().GetAll()
+            join m in _unitOfWork.GetRepository<Message>().GetAll() 
                 on a.MessageId equals m.Id
             where a.Id == attachmentId 
                 && !a.IsDeleted 
