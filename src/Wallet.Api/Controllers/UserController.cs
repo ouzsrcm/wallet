@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.User;
+using Microsoft.Extensions.Logging;
+using Wallet.Services.Exceptions;
 
 namespace Wallet.Api.Controllers;
 
@@ -14,10 +16,14 @@ namespace Wallet.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly ILogger<UserController> _logger;
 
-    public UserController(IUserService userService)
+    public UserController(
+        IUserService userService,
+        ILogger<UserController> logger)
     {
         _userService = userService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -52,12 +58,22 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Getting user details for {UserId}", id);
+            
             var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                _logger.LogWarning("User {UserId} not found", id);
+                return NotFound(new { message = "User not found" });
+            }
+            
+            _logger.LogInformation("Retrieved user details for {UserId}", id);
             return Ok(user);
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error getting user details for {UserId}", id);
+            return StatusCode(500, new { message = "Kullanıcı bilgileri getirilirken bir hata oluştu" });
         }
     }
 
@@ -71,12 +87,22 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Getting user details for username {Username}", username);
+            
             var user = await _userService.GetUserByUsernameAsync(username);
+            if (user == null)
+            {
+                _logger.LogWarning("User with username {Username} not found", username);
+                return NotFound(new { message = "User not found" });
+            }
+            
+            _logger.LogInformation("Retrieved user details for username {Username}", username);
             return Ok(user);
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error getting user details for username {Username}", username);
+            return StatusCode(500, new { message = "Kullanıcı bilgileri getirilirken bir hata oluştu" });
         }
     }
 
@@ -103,12 +129,25 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Creating new user with username {Username}", userDto.Username);
+            
             var user = await _userService.CreateUserAsync(userDto);
+            
+            _logger.LogInformation("Created user {UserId} with username {Username}", 
+                user.Id, userDto.Username);
+                
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        }
+        catch (BadRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to create user with username {Username}: {Message}", 
+                userDto.Username, ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            _logger.LogError(ex, "Error creating user with username {Username}", userDto.Username);
+            return StatusCode(500, new { message = "Kullanıcı oluşturulurken bir hata oluştu" });
         }
     }
 
@@ -132,12 +171,22 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Updating user {UserId}", id);
+            
             var user = await _userService.UpdateUserAsync(id, userDto);
+            
+            _logger.LogInformation("Updated user {UserId}", id);
             return Ok(user);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User {UserId} not found for update", id);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error updating user {UserId}", id);
+            return StatusCode(500, new { message = "Kullanıcı güncellenirken bir hata oluştu" });
         }
     }
 
@@ -185,12 +234,22 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Updating credentials for user {UserId}", userId);
+            
             var credentials = await _userService.UpdateCredentialsAsync(userId, credentialDto);
+            
+            _logger.LogInformation("Updated credentials for user {UserId}", userId);
             return Ok(credentials);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User {UserId} not found for credential update", userId);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error updating credentials for user {UserId}", userId);
+            return StatusCode(500, new { message = "Kullanıcı kimlik bilgileri güncellenirken bir hata oluştu" });
         }
     }
 
@@ -235,11 +294,16 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Email verification attempt for user {UserId}", userId);
+            
             await _userService.VerifyEmailAsync(userId, token);
+            
+            _logger.LogInformation("Email verified successfully for user {UserId}", userId);
             return Ok(new { message = "Email verified successfully" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error verifying email for user {UserId}", userId);
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -255,11 +319,16 @@ public class UserController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Phone verification attempt for user {UserId}", userId);
+            
             await _userService.VerifyPhoneAsync(userId, token);
+            
+            _logger.LogInformation("Phone verified successfully for user {UserId}", userId);
             return Ok(new { message = "Phone number verified successfully" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error verifying phone for user {UserId}", userId);
             return BadRequest(new { message = ex.Message });
         }
     }

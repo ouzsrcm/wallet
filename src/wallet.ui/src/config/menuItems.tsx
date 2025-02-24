@@ -1,4 +1,4 @@
-import { DashboardOutlined, TransactionOutlined, UserOutlined, MessageOutlined } from '@ant-design/icons';
+import { DashboardOutlined, TransactionOutlined, UserOutlined, MessageOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 export interface MenuItem {
@@ -19,8 +19,18 @@ export const menuItems: MenuItem[] = [
     label: <Link to="/profile">Profile</Link>,
   },
   {
+    key: '/transactions',
+    icon: <TransactionOutlined />,
+    label: <Link to="/transactions">Transactions</Link>,
+  },
+  {
     key: '/messages',
     icon: <MessageOutlined />,
     label: <Link to="/messages">Messages</Link>,
+  },
+  {
+    key: '/categories',
+    icon: <AppstoreOutlined />,
+    label: <Link to="/categories">Categories</Link>,
   },
 ]; 

@@ -24,10 +24,9 @@ public class FinanceService : IFinanceService
     public async Task<CategoryDto> GetCategoryByIdAsync(Guid id)
     {
         var category = await _unitOfWork.GetRepository<Category>()
-            .GetAllAsync<CategoryDto>(
+            .GetAllAsync(
                 predicate: c => c.Id == id && !c.IsDeleted,
-                include: q => q
-                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                include: null,
                 selector: c => new CategoryDto
                 {
                     Id = c.Id,
@@ -36,7 +35,8 @@ public class FinanceService : IFinanceService
                     Type = c.Type,
                     Icon = c.Icon,
                     Color = c.Color,
-                    ParentCategoryId = c.ParentCategoryId
+                    ParentCategoryId = c.ParentCategoryId,
+                    IsSystem = c.IsSystem
                 });
 
         return category.FirstOrDefault() ?? throw new NotFoundException("Category not found");
@@ -45,20 +45,18 @@ public class FinanceService : IFinanceService
     public async Task<List<CategoryDto>> GetCategoriesAsync(bool includeDeleted = false)
     {
         var query = await _unitOfWork.GetRepository<Category>()
-            .GetAllAsync<CategoryDto>(
-                predicate: c => !c.IsDeleted,
-                include: q => q
-                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
-                selector: c => new CategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description,
-                    Type = c.Type,
-                    Icon = c.Icon,
-                    Color = c.Color,
-                    ParentCategoryId = c.ParentCategoryId
-                });
+                        .GetWhere(c => !c.IsDeleted)
+                        .Select(c => new CategoryDto
+                        {
+                            Id = c.Id,
+                            Name = c.Name,
+                            Description = c.Description,
+                            Type = c.Type,
+                            Icon = c.Icon,
+                            Color = c.Color,
+                            ParentCategoryId = c.ParentCategoryId,
+                            IsSystem = c.IsSystem
+                        }).ToListAsync();
 
         return query;
     }
@@ -66,10 +64,9 @@ public class FinanceService : IFinanceService
     public async Task<List<CategoryDto>> GetCategoriesByTypeAsync(TransactionType type)
     {
         var categories = await _unitOfWork.GetRepository<Category>()
-            .GetAllAsync<CategoryDto>(
+            .GetAllAsync(
                 predicate: c => c.Type == type && !c.IsDeleted,
-                include: q => q
-                    .Include(c => c.Transactions.Where(t => !t.IsDeleted)),
+                include: null,
                 selector: c => new CategoryDto
                 {
                     Id = c.Id,
@@ -97,7 +94,13 @@ public class FinanceService : IFinanceService
         var category = await _unitOfWork.GetRepository<Category>().GetByIdAsync(id)
             ?? throw new NotFoundException("Category not found");
 
-        _mapper.Map(categoryDto, category);
+        category.Name = categoryDto.Name;
+        category.Description = categoryDto.Description;
+        category.Type = categoryDto.Type;
+        category.Icon = categoryDto.Icon;
+        category.Color = categoryDto.Color;
+        category.ParentCategoryId = categoryDto.ParentCategoryId;
+
         await _unitOfWork.GetRepository<Category>().UpdateAsync(category);
         return _mapper.Map<CategoryDto>(category);
     }
@@ -332,7 +335,11 @@ public class FinanceService : IFinanceService
                         Id = c.Id,
                         Name = c.Name,
                         Description = c.Description,
-                        Type = c.Type
+                        Type = c.Type,
+                        Icon = c.Icon,
+                        Color = c.Color,
+                        ParentCategoryId = c.ParentCategoryId,
+                        IsSystem = c.IsSystem
                     }
             );
 

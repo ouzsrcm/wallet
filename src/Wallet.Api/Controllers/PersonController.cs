@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Person;
+using Microsoft.Extensions.Logging;
+using Wallet.Services.Exceptions;
 
 namespace Wallet.Api.Controllers;
 
@@ -15,10 +17,14 @@ namespace Wallet.Api.Controllers;
 public class PersonController : ControllerBase
 {
     private readonly IPersonService _personService;
+    private readonly ILogger<PersonController> _logger;
 
-    public PersonController(IPersonService personService)
+    public PersonController(
+        IPersonService personService,
+        ILogger<PersonController> logger)
     {
         _personService = personService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -64,12 +70,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Getting person details for {PersonId}", id);
+            
             var person = await _personService.GetPersonByIdAsync(id);
+            if (person == null)
+            {
+                _logger.LogWarning("Person {PersonId} not found", id);
+                return NotFound(new { message = "Person not found" });
+            }
+            
+            _logger.LogInformation("Retrieved person details for {PersonId}", id);
             return Ok(person);
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error getting person details for {PersonId}", id);
+            return StatusCode(500, new { message = "Kişi bilgileri getirilirken bir hata oluştu" });
         }
     }
 
@@ -97,12 +113,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Creating new person");
+            
             var person = await _personService.CreatePersonAsync(personDto);
+            
+            _logger.LogInformation("Created person {PersonId}", person.Id);
             return CreatedAtAction(nameof(GetPerson), new { id = person.Id }, person);
+        }
+        catch (BadRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to create person: {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            _logger.LogError(ex, "Error creating person");
+            return StatusCode(500, new { message = "Kişi oluşturulurken bir hata oluştu" });
         }
     }
 
@@ -127,12 +153,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Updating person {PersonId}", id);
+            
             var person = await _personService.UpdatePersonAsync(id, personDto);
+            
+            _logger.LogInformation("Updated person {PersonId}", id);
             return Ok(person);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Person {PersonId} not found for update", id);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error updating person {PersonId}", id);
+            return StatusCode(500, new { message = "Kişi güncellenirken bir hata oluştu" });
         }
     }
 
@@ -146,12 +182,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Deleting person {PersonId}", id);
+            
             await _personService.DeletePersonAsync(id);
+            
+            _logger.LogInformation("Deleted person {PersonId}", id);
             return Ok(new { message = "Person deleted successfully" });
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Person {PersonId} not found for deletion", id);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error deleting person {PersonId}", id);
+            return StatusCode(500, new { message = "Kişi silinirken bir hata oluştu" });
         }
     }
 
@@ -178,12 +224,23 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Adding address for person {PersonId}", personId);
+            
             var address = await _personService.AddAddressAsync(personId, addressDto);
+            
+            _logger.LogInformation("Added address {AddressId} for person {PersonId}", 
+                address.Id, personId);
             return CreatedAtAction(nameof(GetPerson), new { id = personId }, address);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Person {PersonId} not found for adding address", personId);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error adding address for person {PersonId}", personId);
+            return StatusCode(500, new { message = "Adres eklenirken bir hata oluştu" });
         }
     }
 
@@ -207,12 +264,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Updating address {AddressId}", addressId);
+            
             var address = await _personService.UpdateAddressAsync(addressId, addressDto);
+            
+            _logger.LogInformation("Updated address {AddressId}", addressId);
             return Ok(address);
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Address {AddressId} not found for update", addressId);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error updating address {AddressId}", addressId);
+            return StatusCode(500, new { message = "Adres güncellenirken bir hata oluştu" });
         }
     }
 
@@ -226,12 +293,22 @@ public class PersonController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Deleting address {AddressId}", addressId);
+            
             await _personService.DeleteAddressAsync(addressId);
+            
+            _logger.LogInformation("Deleted address {AddressId}", addressId);
             return Ok(new { message = "Address deleted successfully" });
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Address {AddressId} not found for deletion", addressId);
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return NotFound(new { message = ex.Message });
+            _logger.LogError(ex, "Error deleting address {AddressId}", addressId);
+            return StatusCode(500, new { message = "Adres silinirken bir hata oluştu" });
         }
     }
 

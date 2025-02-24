@@ -17,8 +17,15 @@ using Wallet.Services.Mapping;
 using Wallet.DataLayer.Interceptors;
 using Wallet.Infrastructure.Services;
 using Wallet.Infrastructure.Abstract;
+using Serilog;
+using Wallet.Services.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog yapılandırması
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -146,6 +153,9 @@ builder.Services.AddCors(options =>
 
 // AutoMapper configuration
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Request logging middleware
+builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
 

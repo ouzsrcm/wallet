@@ -4,18 +4,16 @@ namespace Wallet.Entities.EntityObjects;
 
 public class AuditLog : SoftDeleteEntity
 {
-    public string EntityName { get; set; }
-    public string ActionType { get; set; } // Create, Update, Delete, SoftDelete
-    public string UserId { get; set; }
-    public string UserName { get; set; }
+    public string? EntityName { get; set; }
+    public string? ActionType { get; set; } // Create, Update, Delete, SoftDelete
+    public string? UserId { get; set; }
+    public string? UserName { get; set; }
     public DateTime ActionDate { get; set; }
     public string? OldValues { get; set; }
     public string? NewValues { get; set; }
     public string? AffectedColumns { get; set; }
     public string? PrimaryKey { get; set; }
     public string? TableName { get; set; }
-    public string? IPAddress { get; set; }
-    public string? UserAgent { get; set; }
     public string? RequestUrl { get; set; }
     public string? RequestMethod { get; set; }
     public string? RequestBody { get; set; }
