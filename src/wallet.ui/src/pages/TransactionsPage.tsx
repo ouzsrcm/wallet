@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Modal, Form, Input, Select, message, DatePicker } from 'antd';
+import { Button, Table, Modal, Form, Input, Select, message, DatePicker, Checkbox, Row, Col, Divider } from 'antd';
 
 import transactionService from '../services/transactionService';
 import { TransactionDto } from '../types/transaction';
 import { TransactionType } from '../types/enums';
 import { PaymentMethod } from '../types/PaymentMethod';
 import { enumService } from '../services/enumService';
+import { CategoryDto } from '../types/category';
+import categoryService from '../services/categoryService';
+
 
 const TransactionsPage: React.FC = () => {
     const [transactions, setTransactions] = useState<TransactionDto[]>([]);
@@ -14,11 +17,14 @@ const TransactionsPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
+    const [categories, setCategories] = useState<CategoryDto[]>([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(false);
 
     useEffect(() => {
         fetchTransactions();
         fetchTransactionTypes();
         fetchPaymentMethods();
+        fetchCategories();
     }, []);
 
     const fetchTransactions = async () => {
@@ -48,6 +54,18 @@ const TransactionsPage: React.FC = () => {
             setPaymentMethods(data);
         } catch (error) {
             message.error('Failed to fetch payment methods');
+        }
+    }
+
+    const fetchCategories = async () => {
+        try {
+            setCategoriesLoading(true);
+            const data = await categoryService.getAll();
+            setCategories(data);
+        } catch (error) {
+            message.error('Failed to fetch categories');
+        } finally {
+            setCategoriesLoading(false);
         }
     }
 
@@ -90,6 +108,7 @@ const TransactionsPage: React.FC = () => {
     return (
         <div>
             <Button type="primary" onClick={handleAdd}>Add Transaction</Button>
+            <Divider />
             <Table
                 rowKey="id"
                 dataSource={transactions}
@@ -117,46 +136,109 @@ const TransactionsPage: React.FC = () => {
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
+                width={800}
             >
                 <Form
                     initialValues={editingTransaction || { description: '', amount: 0, currency: 'USD' }}
                     onFinish={handleOk}
+                    layout="horizontal"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 16 }}
                 >
-                    <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
-                        <Input type="number" />
-                    </Form.Item>
-                    <Form.Item name="transactionDate" label="Transaction Date" rules={[{ required: true }]}>
-                        <DatePicker />
-                    </Form.Item>
-                    <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-                        <Select>
-                            {transactionTypes.map(type => (
-                                <Select.Option key={type.id} value={type.id}>
-                                    {type.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item name="paymentMethod" label="Payment Method" rules={[{ required: true }]}>
-                        <Select>
-                            {paymentMethods.map(method => (
-                                <Select.Option key={method.id} value={method.id}>
-                                    {method.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item name="currency" label="Currency" rules={[{ required: true }]}>
-                        <Select>
-                            <Select.Option value="USD">USD</Select.Option>
-                            <Select.Option value="EUR">EUR</Select.Option>
-                            <Select.Option value="TRY">TRY</Select.Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+                                <Input />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
+                                <Input type="number" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="transactionDate" label="Transaction Date" rules={[{ required: true }]}>
+                                <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="currency" label="Currency" rules={[{ required: true }]}>
+                                <Select>
+                                    <Select.Option value="USD">USD</Select.Option>
+                                    <Select.Option value="EUR">EUR</Select.Option>
+                                    <Select.Option value="TRY">TRY</Select.Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+                                <Select>
+                                    {transactionTypes.map(type => (
+                                        <Select.Option key={type.id} value={type.id}>
+                                            {type.name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="categoryId" label="Category" rules={[{ required: true }]}>
+                                <Select>
+                                    {categories.map(category => (
+                                        <Select.Option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="paymentMethod" label="Payment Method" rules={[{ required: true }]}>
+                                <Select>
+                                    {paymentMethods.map(method => (
+                                        <Select.Option key={method.id} value={method.id}>
+                                            {method.name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="reference" label="Reference">
+                                <Input />
+                                <small>
+                                    (Fatura no, sipariş no vs.)
+                                </small>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="isRecurring" label="Is Recurring" valuePropName="checked">
+                                <Checkbox />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="recurringPeriod" label="Recurring Period">
+                                <Select>
+                                    <Select.Option value="Daily">Daily</Select.Option>
+                                    <Select.Option value="Weekly">Weekly</Select.Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Form.Item wrapperCol={{ offset: 4, span: 16 }}>
                         <Button type="primary" htmlType="submit">Save</Button>
                     </Form.Item>
                 </Form>

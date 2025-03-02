@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Input, message, Tree, Spin, Select, Dropdown, Menu, ColorPicker } from 'antd';
+import { Button, Modal, Form, Input, message, Tree, Spin, Select, Dropdown, Menu, ColorPicker, Row, Col, Divider } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import categoryService from '../services/categoryService';
 import { CategoryDto } from '../types/category';
@@ -128,6 +128,7 @@ const CategoriesPage: React.FC = () => {
     return (
         <div>
             <Button type="primary" onClick={handleAdd}>Add Category</Button>
+            <Divider />
             {loading ? (
                 <Spin />
             ) : (
@@ -166,6 +167,7 @@ const CategoriesPage: React.FC = () => {
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
+                width={800}
             >
                 <Form
                     initialValues={{
@@ -177,40 +179,64 @@ const CategoriesPage: React.FC = () => {
                         icon: editingCategory?.icon || ''
                     }}
                     onFinish={handleOk}
+                    layout="horizontal"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 16 }}
                 >
-                    <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="description" label="Description">
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="icon" label="Icon" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="color" label="Color" rules={[{ required: true }]}>
-                        <ColorPicker 
-                            format="hex" 
-                            showText={(color) => color.toHexString()}
-                        />
-                    </Form.Item>
-                    <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-                        <Select>
-                            {transactionTypes.map((x) => (
-                                <Select.Option key={x.id} value={x.id}>{x.title} ({x.name})</Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item name="parentCategoryId" label="Parent Category">
-                        <Select allowClear>
-                            <Select.Option value={null}>None</Select.Option>
-                            {categories.filter(x => x.parentCategoryId === null).map(category => (
-                                <Select.Option key={category.id} value={category.id} style={{ color: category.color }} selected={category.id == editingCategory?.parentCategoryId}>
-                                    {category.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+                                <Input />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="description" label="Description">
+                                <Input />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="icon" label="Icon" rules={[{ required: true }]}>
+                                <Input />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="color" label="Color" rules={[{ required: true }]}>
+                                <ColorPicker 
+                                    format="hex" 
+                                    showText={(color) => color.toHexString()}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+                                <Select>
+                                    {transactionTypes.map((x) => (
+                                        <Select.Option key={x.id} value={x.id}>{x.title} ({x.name})</Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="parentCategoryId" label="Parent Category">
+                                <Select allowClear>
+                                    <Select.Option value={null}>None</Select.Option>
+                                    {categories.filter(x => x.parentCategoryId === null).map(category => (
+                                        <Select.Option key={category.id} value={category.id} style={{ color: category.color }} selected={category.id == editingCategory?.parentCategoryId}>
+                                            {category.name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Form.Item wrapperCol={{ offset: 4, span: 16 }}>
                         <Button type="primary" htmlType="submit">Save</Button>
                     </Form.Item>
                 </Form>
