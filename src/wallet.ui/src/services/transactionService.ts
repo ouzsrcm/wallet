@@ -2,8 +2,8 @@ import api from './api';
 import { TransactionDto } from '../types/transaction';
 
 const transactionService = {
-    getAll: async (userId: string): Promise<TransactionDto[]> => {
-        const response = await api.get(`/v1/Transactions?userId=${userId}`);
+    getAll: async (): Promise<TransactionDto[]> => {
+        const response = await api.get(`/v1/Transactions`);
         return response.data;
     },
     create: async (transaction: TransactionDto): Promise<TransactionDto> => {

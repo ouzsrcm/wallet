@@ -3,6 +3,7 @@ using Wallet.Entities.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using Wallet.Entities.Extensions;
+using Wallet.Entities.Enums;
 
 namespace Wallet.Api.Controllers;
 
@@ -36,4 +37,23 @@ public class EnumsController : ControllerBase
 
         return Ok(transactionTypes);
     }
+
+    [HttpGet("payment-methods")]
+    [ProducesResponseType(typeof(List<object>), StatusCodes.Status200OK)]
+    public IActionResult GetPaymentMethods()
+    {
+        var paymentMethods = Enum.GetValues(typeof(PaymentMethod))
+            .Cast<PaymentMethod>()
+            .Select(e => new
+            {
+                Id = (int)e,
+                Name = e.ToString(),
+                Title = e.GetDescription()
+            })
+            .ToList();
+
+        return Ok(paymentMethods);
+    }
+
+
 }

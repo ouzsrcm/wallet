@@ -1,3 +1,6 @@
+
+namespace Wallet.Entities.Enums;
+
 public enum PaymentMethod
 {
     Cash = 1,

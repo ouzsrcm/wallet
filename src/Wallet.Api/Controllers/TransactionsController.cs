@@ -4,6 +4,8 @@ using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Finance;
 using Microsoft.Extensions.Logging;
 using Wallet.Services.Exceptions;
+using System.Security.Claims;
+using System;
 
 namespace Wallet.Api.Controllers;
 
@@ -32,21 +34,28 @@ public class TransactionsController : ControllerBase
     /// <response code="200">İşlemler başarıyla getirildi</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<TransactionDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(Guid userId)
+    public async Task<IActionResult> GetAll()
     {
+        var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!, out var userIdGuid) ? userIdGuid : Guid.Empty;
+        if (userIdGuid == Guid.Empty)
+        {
+            _logger.LogWarning("User ID not found in token");
+            return Unauthorized();
+        }
+        
         try
         {
-            _logger.LogInformation("Getting all transactions for user {UserId}", userId);
-            
-            var transactions = await _financeService.GetTransactionsAsync(userId);
-            
-            _logger.LogInformation("Retrieved {Count} transactions for user {UserId}", 
-                transactions.Count, userId);
+            _logger.LogInformation("Getting all transactions for user {UserId}", userIdGuid);
+
+            var transactions = await _financeService.GetTransactionsAsync(userIdGuid);
+
+            _logger.LogInformation("Retrieved {Count} transactions for user {UserId}",
+                transactions.Count, userIdGuid);
             return Ok(transactions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting transactions for user {UserId}", userId);
+            _logger.LogError(ex, "Error getting transactions for user {UserId}", userIdGuid);
             return StatusCode(500, new { message = "İşlemler getirilirken bir hata oluştu" });
         }
     }
@@ -66,14 +75,14 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("Getting transaction {TransactionId}", id);
-            
+
             var transaction = await _financeService.GetTransactionByIdAsync(id);
             if (transaction == null)
             {
                 _logger.LogWarning("Transaction {TransactionId} not found", id);
                 return NotFound();
             }
-            
+
             _logger.LogInformation("Retrieved transaction {TransactionId}", id);
             return Ok(transaction);
         }
@@ -98,12 +107,12 @@ public class TransactionsController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Creating new transaction for user {UserId}", 
+            _logger.LogInformation("Creating new transaction for user {UserId}",
                 transactionDto.PersonId);
-            
+
             var created = await _financeService.CreateTransactionAsync(transactionDto);
-            
-            _logger.LogInformation("Created transaction {TransactionId} for user {UserId}", 
+
+            _logger.LogInformation("Created transaction {TransactionId} for user {UserId}",
                 created.Id, created.PersonId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -114,7 +123,7 @@ public class TransactionsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating transaction for user {UserId}", 
+            _logger.LogError(ex, "Error creating transaction for user {UserId}",
                 transactionDto.PersonId);
             return StatusCode(500, new { message = "İşlem oluşturulurken bir hata oluştu" });
         }
@@ -136,9 +145,9 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("Updating transaction {TransactionId}", id);
-            
+
             var updated = await _financeService.UpdateTransactionAsync(id, transactionDto);
-            
+
             _logger.LogInformation("Updated transaction {TransactionId}", id);
             return Ok(updated);
         }
@@ -169,9 +178,9 @@ public class TransactionsController : ControllerBase
         try
         {
             _logger.LogInformation("Deleting transaction {TransactionId}", id);
-            
+
             await _financeService.DeleteTransactionAsync(id);
-            
+
             _logger.LogInformation("Deleted transaction {TransactionId}", id);
             return NoContent();
         }
@@ -186,4 +195,4 @@ public class TransactionsController : ControllerBase
             return StatusCode(500, new { message = "İşlem silinirken bir hata oluştu" });
         }
     }
-} 
+}

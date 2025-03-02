@@ -140,7 +140,6 @@ const CategoriesPage: React.FC = () => {
                                 <Button size="small">Actions</Button>
                             </Dropdown>
                             <span style={{ marginLeft: 20 }}>
-                                {nodeData.name}
                                 {nodeData.color && (
                                     <span 
                                         className="color-preview" 
@@ -151,10 +150,12 @@ const CategoriesPage: React.FC = () => {
                                             borderRadius: '4px',
                                             backgroundColor: nodeData.color,
                                             marginLeft: '8px',
-                                            verticalAlign: 'middle'
+                                            verticalAlign: 'middle',
+                                            marginRight: '8px'
                                         }}
                                     />
                                 )}
+                                {nodeData.name}
                             </span>
                         </span>
                     )}
@@ -203,7 +204,7 @@ const CategoriesPage: React.FC = () => {
                         <Select allowClear>
                             <Select.Option value={null}>None</Select.Option>
                             {categories.filter(x => x.parentCategoryId === null).map(category => (
-                                <Select.Option key={category.id} value={category.id}>
+                                <Select.Option key={category.id} value={category.id} style={{ color: category.color }} selected={category.id == editingCategory?.parentCategoryId}>
                                     {category.name}
                                 </Select.Option>
                             ))}
