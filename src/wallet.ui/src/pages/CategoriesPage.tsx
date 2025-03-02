@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Input, message, Tree, Spin, Select, Dropdown, Menu } from 'antd';
+import { Button, Modal, Form, Input, message, Tree, Spin, Select, Dropdown, Menu, ColorPicker } from 'antd';
+import type { Color } from 'antd/es/color-picker';
 import categoryService from '../services/categoryService';
 import { CategoryDto } from '../types/category';
 import './CategoriesPage.css';
@@ -66,13 +67,20 @@ const CategoriesPage: React.FC = () => {
         }
     };
 
-    const handleOk = async (values: CategoryDto) => {
+    const handleOk = async (values: any) => {
         try {
+            const formData = {
+                ...values,
+                color: typeof values.color === 'string' 
+                    ? values.color 
+                    : values.color?.toHexString()
+            };
+
             if (editingCategory) {
-                await categoryService.update(editingCategory.id, values);
+                await categoryService.update(editingCategory.id, formData);
                 message.success('Category updated successfully');
             } else {
-                await categoryService.create(values);
+                await categoryService.create(formData);
                 message.success('Category added successfully');
             }
             fetchCategories();
@@ -104,16 +112,18 @@ const CategoriesPage: React.FC = () => {
         return roots;
     };
 
-    const menu = (nodeData: any) => (
-        <Menu>
-            <Menu.Item key="edit" onClick={() => handleEdit(nodeData)}>
-                Edit
-            </Menu.Item>
-            <Menu.Item key="delete" onClick={() => handleDelete(nodeData.id)}>
-                Delete
-            </Menu.Item>
-        </Menu>
-    );
+    const menu = (nodeData: any) => [
+        {
+            key: 'edit',
+            label: 'Edit',
+            onClick: () => handleEdit(nodeData)
+        },
+        {
+            key: 'delete',
+            label: 'Delete',
+            onClick: () => handleDelete(nodeData.id)
+        }
+    ];
 
     return (
         <div>
@@ -126,10 +136,26 @@ const CategoriesPage: React.FC = () => {
                     treeData={buildTreeData(categories)}
                     titleRender={(nodeData) => (
                         <span className="category-node">
-                            <Dropdown overlay={menu(nodeData)} trigger={['click']}>
+                            <Dropdown menu={{ items: menu(nodeData) }} trigger={['click']}>
                                 <Button size="small">Actions</Button>
                             </Dropdown>
-                            <span style={{ marginLeft: 20 }}>{nodeData.name}</span>
+                            <span style={{ marginLeft: 20 }}>
+                                {nodeData.name}
+                                {nodeData.color && (
+                                    <span 
+                                        className="color-preview" 
+                                        style={{ 
+                                            display: 'inline-block',
+                                            width: '16px',
+                                            height: '16px',
+                                            borderRadius: '4px',
+                                            backgroundColor: nodeData.color,
+                                            marginLeft: '8px',
+                                            verticalAlign: 'middle'
+                                        }}
+                                    />
+                                )}
+                            </span>
                         </span>
                     )}
                 />
@@ -146,7 +172,7 @@ const CategoriesPage: React.FC = () => {
                         description: editingCategory?.description || '',
                         parentCategoryId: editingCategory?.parentCategoryId || null,
                         type: editingCategory?.type || '',
-                        color: editingCategory?.color || '',
+                        color: editingCategory?.color || '#1890ff',
                         icon: editingCategory?.icon || ''
                     }}
                     onFinish={handleOk}
@@ -161,12 +187,15 @@ const CategoriesPage: React.FC = () => {
                         <Input />
                     </Form.Item>
                     <Form.Item name="color" label="Color" rules={[{ required: true }]}>
-                        <Input />
+                        <ColorPicker 
+                            format="hex" 
+                            showText={(color) => color.toHexString()}
+                        />
                     </Form.Item>
                     <Form.Item name="type" label="Type" rules={[{ required: true }]}>
                         <Select>
                             {transactionTypes.map((x) => (
-                                <Select.Option value={x.id}>{x.title} ({x.name})</Select.Option>
+                                <Select.Option key={x.id} value={x.id}>{x.title} ({x.name})</Select.Option>
                             ))}
                         </Select>
                     </Form.Item>

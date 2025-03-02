@@ -27,6 +27,16 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
+// HTTPS yapılandırması için Kestrel ayarlarını ekleyin
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ConfigureHttpsDefaults(options =>
+    {
+        options.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | 
+                              System.Security.Authentication.SslProtocols.Tls13;
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -147,7 +157,8 @@ builder.Services.AddCors(options =>
             builder.WithOrigins("http://localhost:5173") // React uygulamasının adresi
                    .AllowAnyMethod()
                    .AllowAnyHeader()
-                   .AllowCredentials();
+                   .AllowCredentials()
+                   .SetIsOriginAllowed(_ => true); // Geliştirme ortamında tüm originlere izin ver
         });
 });
 
@@ -158,6 +169,14 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
+
+// HTTPS yönlendirmesi ekleyin
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || true)
@@ -182,7 +201,6 @@ if (app.Environment.IsDevelopment() || true)
     });
 }
 
-// app.UseHttpsRedirection(); // Bu satırı kaldırın veya yoruma alın
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("AllowAll");
