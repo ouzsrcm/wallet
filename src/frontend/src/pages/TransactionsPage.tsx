@@ -6,14 +6,18 @@ import { TransactionDto } from '../types/transaction';
 import { TransactionType } from '../types/Enums';
 import { PaymentMethod } from '../types/PaymentMethod';
 import { enumService } from '../services/enumService';
+import { CurrencyDto } from '../types/Currency';
 import { CategoryDto } from '../types/Category';
 import categoryService from '../services/categoryService';
+import currencyService from '../services/currencyService';
+
 
 
 const TransactionsPage: React.FC = () => {
     const [transactions, setTransactions] = useState<TransactionDto[]>([]);
     const [transactionTypes, setTransactionTypes] = useState<TransactionType[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+    const [currencies, setCurrencies] = useState<CurrencyDto[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
@@ -25,7 +29,20 @@ const TransactionsPage: React.FC = () => {
         fetchTransactionTypes();
         fetchPaymentMethods();
         fetchCategories();
+        fetchCurrencies();
     }, []);
+
+    const fetchCurrencies = async () => {
+        try {
+            setLoading(true);
+            const data = await currencyService.getAll();
+            setCurrencies(data);
+        } catch (error) {
+            message.error('Failed to fetch currencies');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const fetchTransactions = async () => {
         try {
@@ -167,9 +184,11 @@ const TransactionsPage: React.FC = () => {
                         <Col span={12}>
                             <Form.Item name="currency" label="Currency" rules={[{ required: true }]}>
                                 <Select>
-                                    <Select.Option value="USD">USD</Select.Option>
-                                    <Select.Option value="EUR">EUR</Select.Option>
-                                    <Select.Option value="TRY">TRY</Select.Option>
+                                    {currencies.map(currency => (
+                                        <Select.Option key={currency.id} value={currency.id}>
+                                             ({currency.symbol}) {currency.code} {currency.name}
+                                        </Select.Option>
+                                    ))}
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -231,8 +250,8 @@ const TransactionsPage: React.FC = () => {
                         <Col span={12}>
                             <Form.Item name="recurringPeriod" label="Recurring Period">
                                 <Select>
-                                    <Select.Option value="Daily">Daily</Select.Option>
-                                    <Select.Option value="Weekly">Weekly</Select.Option>
+                                    <Select.Option value="Daily" key="Daily">Daily</Select.Option>
+                                    <Select.Option value="Weekly" key="Weekly">Weekly</Select.Option>
                                 </Select>
                             </Form.Item>
                         </Col>

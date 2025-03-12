@@ -86,6 +86,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IFinanceUnitOfWork, FinanceUnitOfWork>();
 builder.Services.AddScoped<IFinanceService, FinanceService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 // Audit interceptor'ı kaydet
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();

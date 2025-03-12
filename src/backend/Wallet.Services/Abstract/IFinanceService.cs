@@ -16,7 +16,7 @@ public interface IFinanceService
 
     // Transaction operations
     Task<TransactionDto> GetTransactionByIdAsync(Guid id);
-    Task<List<TransactionDto>> GetTransactionsAsync(Guid personId);
+    Task<List<TransactionDto>> GetTransactionsAsync();
     Task<TransactionDto> CreateTransactionAsync(TransactionDto transactionDto);
     Task<TransactionDto> UpdateTransactionAsync(Guid id, TransactionDto transactionDto);
     Task DeleteTransactionAsync(Guid id);

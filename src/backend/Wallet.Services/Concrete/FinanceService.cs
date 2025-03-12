@@ -6,18 +6,34 @@ using Wallet.Services.Exceptions;
 using Wallet.Services.UnitOfWorkBase.Abstract;
 using Wallet.Entities.EntityObjects;
 using Wallet.Entities.Enums;
-
+using Wallet.Infrastructure.Abstract;
 namespace Wallet.Services.Concrete;
 
 public class FinanceService : IFinanceService
 {
     private readonly IFinanceUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IMapper _mapper;
 
-    public FinanceService(IFinanceUnitOfWork unitOfWork, IMapper mapper)
+    public FinanceService(IFinanceUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _currentUserService = currentUserService;
+    }
+
+    public async Task<Guid> PersonId()
+    {
+        var userId = _currentUserService.GetCurrentUserId() 
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        if (!Guid.TryParse(userId, out var userIdGuid))
+            throw new BadRequestException("Invalid user ID");
+
+        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userIdGuid)
+            ?? throw new NotFoundException("User not found");
+
+        return user.PersonId;
     }
 
     // Category operations
@@ -116,9 +132,11 @@ public class FinanceService : IFinanceService
     // Transaction operations
     public async Task<TransactionDto> GetTransactionByIdAsync(Guid id)
     {
+        var personId = await PersonId();
+
         var transaction = await _unitOfWork.GetRepository<Transaction>()
             .GetAllAsync<TransactionDto>(
-                predicate: t => t.Id == id && !t.IsDeleted,
+                predicate: t => t.Id == id && t.PersonId == personId && !t.IsDeleted,
                 include: q => q
                     .Include(t => t.Category),
                 selector: t => new TransactionDto
@@ -143,8 +161,10 @@ public class FinanceService : IFinanceService
         return transaction.FirstOrDefault() ?? throw new NotFoundException("Transaction not found");
     }
 
-    public async Task<List<TransactionDto>> GetTransactionsAsync(Guid personId)
+    public async Task<List<TransactionDto>> GetTransactionsAsync()
     {
+        var personId = await PersonId();
+
         var transactions = await _unitOfWork.GetRepository<Transaction>()
             .GetAllAsync<TransactionDto>(
                 predicate: t => t.PersonId == personId && !t.IsDeleted,
@@ -170,8 +190,23 @@ public class FinanceService : IFinanceService
 
     public async Task<TransactionDto> CreateTransactionAsync(TransactionDto transactionDto)
     {
-        var transaction = _mapper.Map<Transaction>(transactionDto);
+        var transaction = new Transaction()
+        {
+            Amount = transactionDto.Amount,
+            Currency = transactionDto.Currency ?? "TRY",
+            TransactionDate = transactionDto.TransactionDate,
+            Description = transactionDto.Description,
+            Type = transactionDto.Type,
+            PaymentMethod = transactionDto.PaymentMethod,
+            Reference = transactionDto.Reference,
+            IsRecurring = transactionDto.IsRecurring,
+            RecurringPeriod = transactionDto.RecurringPeriod,
+            CategoryId = transactionDto.CategoryId,
+            PersonId = await PersonId()
+        };
+
         await _unitOfWork.GetRepository<Transaction>().AddAsync(transaction);
+
         return _mapper.Map<TransactionDto>(transaction);
     }
 

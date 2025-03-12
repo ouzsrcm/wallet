@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Wallet.Infrastructure.Abstract;
+using System.Text.Json;
 
 namespace Wallet.Infrastructure.Services;
 
@@ -15,6 +16,20 @@ public class CurrentUserService : ICurrentUserService
 
     public string? GetCurrentUserId() =>
         _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+    public string? GetCurrentPersonId(){
+        var userData = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.UserData)?.Value;
+        if (userData == null)
+            return null;
+
+        var userDataJson = JsonSerializer.Deserialize<Dictionary<string, string>>(userData);
+        if (userDataJson == null)
+            return null;
+
+        return userDataJson.TryGetValue("PersonId", out var personId)
+            ? personId
+            : null;
+    }
 
     public string? GetCurrentUserName() =>
         _httpContextAccessor.HttpContext?.User?.Identity?.Name;

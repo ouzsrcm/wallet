@@ -37,6 +37,7 @@ public class WalletDbContext : DbContext
     public DbSet<ReceiptItem> ReceiptItems { get; set; }
     public DbSet<Language> Languages { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Currency> Currencies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,5 +49,6 @@ public class WalletDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ReceiptConfiguration());
         modelBuilder.ApplyConfiguration(new ReceiptItemConfiguration());
         modelBuilder.ApplyConfiguration(new LanguageConfiguration());
+        modelBuilder.ApplyConfiguration(new CurrencyConfiguration());
     }
 } 
