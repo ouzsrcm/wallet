@@ -4,7 +4,7 @@ import { MailFilled, InboxOutlined, SendOutlined, DeleteOutlined } from '@ant-de
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { messageService } from '../../services/messageService';
-import { IMessage, IMessageCreate } from '../../types/message';
+import { IMessage, IMessageCreate } from '../../types/Message';
 import MessageItem from './MessageItem';
 import NewMessageForm from './NewMessageForm';
 import MessageThread from './MessageThread';

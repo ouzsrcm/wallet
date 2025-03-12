@@ -1,5 +1,5 @@
 import api from './api';
-import { TransactionType } from '../types/enums';
+import { TransactionType } from '../types/Enums';
 import { PaymentMethod } from '../types/PaymentMethod';
 
 export const enumService = {

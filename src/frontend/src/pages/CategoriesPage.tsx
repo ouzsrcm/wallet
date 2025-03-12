@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, message, Tree, Spin, Select, Dropdown, Menu, ColorPicker, Row, Col, Divider } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import categoryService from '../services/categoryService';
-import { CategoryDto } from '../types/category';
+import { CategoryDto } from '../types/Category';
 import './CategoriesPage.css';
 import { enumService } from '../services/enumService';
-import { TransactionType } from '../types/enums';
+import { TransactionType } from '../types/Enums';
 
 const CategoriesPage: React.FC = () => {
     const [categories, setCategories] = useState<CategoryDto[]>([]);

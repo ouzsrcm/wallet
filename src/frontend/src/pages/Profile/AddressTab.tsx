@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Input, Space, Popconfirm, Tag } from 'antd';
 import { personService } from '../../services/personService';
-import { PersonAddress } from '../../types/person';
+import { PersonAddress } from '../../types/Person';
 import { message } from 'antd';
 
 import AddressTypeSelect from '../../components/address/AddressTypeSelect';

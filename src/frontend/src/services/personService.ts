@@ -1,5 +1,5 @@
 import api from './api';
-import { PersonData, PersonAddress, PersonContact } from '../types/person';
+import { PersonData, PersonAddress, PersonContact } from '../types/Person';
 
 export const personService = {
     // Kişi işlemleri

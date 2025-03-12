@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
 import { authService } from '../../services/authService';
-import { ILoginRequest } from '../../types/auth';
+import { ILoginRequest } from '../../types/Auth';
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);

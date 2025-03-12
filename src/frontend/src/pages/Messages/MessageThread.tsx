@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IMessage } from '../../types/message';
+import { IMessage } from '../../types/Message';
 import MessageItem from './MessageItem';
 
 interface MessageThreadProps {

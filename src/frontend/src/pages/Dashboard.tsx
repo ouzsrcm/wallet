@@ -6,8 +6,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { personService } from '../services/personService';
 import { messageService } from '../services/messageService';
-import { PersonData } from '../types/person';
-import { IMessage } from '../types/message';
+import { PersonData } from '../types/Person';
+import { IMessage } from '../types/Message';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;

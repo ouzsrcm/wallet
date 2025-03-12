@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import dayjs from 'dayjs';
 import { personService } from '../services/personService';
-import { PersonData, PersonAddress } from '../types/person';
+import { PersonData, PersonAddress } from '../types/Person';
 import AddressTab from './Profile/AddressTab';
 import ContactTab from './Profile/ContactTab';
 import GenderSelect from '../components/profile/GenderSelect';

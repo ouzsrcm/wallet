@@ -1,6 +1,6 @@
 import api from './api';
-import { IMessage, IMessageCreate } from '../types/message';
-import { IUser } from '../types/user';
+import { IMessage, IMessageCreate } from '../types/Message';
+import { IUser } from '../types/User';
 
 export const messageService = {
   getInboxMessages: async (): Promise<IMessage[]> => {

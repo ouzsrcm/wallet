@@ -11,7 +11,7 @@ import {
   PhoneFilled
 } from '@ant-design/icons';
 import { personService } from '../../services/personService';
-import { PersonContact } from '../../types/person';
+import { PersonContact } from '../../types/Person';
 import { message } from 'antd';
 
 interface ContactTabProps {

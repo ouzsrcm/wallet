@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Select, Upload, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { messageService } from '../../services/messageService';
-import { IUser } from '../../types/user';
-import { IMessageCreate } from '../../types/message';
+import { IUser } from '../../types/User';
+import { IMessageCreate } from '../../types/Message';
 
 const { TextArea } = Input;
 const { Option } = Select;

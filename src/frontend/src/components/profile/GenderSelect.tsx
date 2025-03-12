@@ -1,5 +1,5 @@
 import { Select } from 'antd';
-import { Gender } from '../../types/enums';
+import { Gender } from '../../types/Enums';
 
 const { Option } = Select;
 

@@ -9,7 +9,7 @@ import {
   CaretDownOutlined,
   CaretRightOutlined 
 } from '@ant-design/icons';
-import { IMessage } from '../../types/message';
+import { IMessage } from '../../types/Message';
 import NewMessageForm from './NewMessageForm';
 import { messageService } from '../../services/messageService';
 

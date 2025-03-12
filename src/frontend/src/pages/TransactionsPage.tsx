@@ -3,10 +3,10 @@ import { Button, Table, Modal, Form, Input, Select, message, DatePicker, Checkbo
 
 import transactionService from '../services/transactionService';
 import { TransactionDto } from '../types/transaction';
-import { TransactionType } from '../types/enums';
+import { TransactionType } from '../types/Enums';
 import { PaymentMethod } from '../types/PaymentMethod';
 import { enumService } from '../services/enumService';
-import { CategoryDto } from '../types/category';
+import { CategoryDto } from '../types/Category';
 import categoryService from '../services/categoryService';
 
 

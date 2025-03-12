@@ -1,5 +1,5 @@
 import { Select } from 'antd';
-import { AddressType } from '../../types/enums';
+import { AddressType } from '../../types/Enums';
 
 const { Option } = Select;
 

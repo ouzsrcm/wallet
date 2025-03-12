@@ -1,5 +1,5 @@
 import api from './api';
-import { CategoryDto } from '../types/category';
+import { CategoryDto } from '../types/Category';
 
 const categoryService = {
     getAll: async (): Promise<CategoryDto[]> => {
