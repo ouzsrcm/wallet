@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Finance;
-using Microsoft.Extensions.Logging;
 using Wallet.Services.Exceptions;
-using System.Security.Claims;
+using Wallet.Infrastructure.Abstract;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 using System;
 
 namespace Wallet.Api.Controllers;
@@ -17,14 +18,31 @@ namespace Wallet.Api.Controllers;
 public class TransactionsController : ControllerBase
 {
     private readonly IFinanceService _financeService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<TransactionsController> _logger;
+
+    private Guid userId
+    {
+        get{
+            var res = _currentUserService.GetCurrentUserId();
+            _logger.LogInformation("User ID: {UserId}", res);
+            if (res == null)
+            {
+                _logger.LogWarning("User ID not found in token");
+                return Guid.Empty;
+            }
+            return Guid.TryParse(res, out var userIdGuid) ? userIdGuid : Guid.Empty;
+        }   
+    }
 
     public TransactionsController(
         IFinanceService financeService,
+        ICurrentUserService currentUserService,
         ILogger<TransactionsController> logger)
     {
-        _financeService = financeService;
         _logger = logger;
+        _financeService = financeService;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -35,27 +53,20 @@ public class TransactionsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(List<TransactionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
-    {
-        var userId = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!, out var userIdGuid) ? userIdGuid : Guid.Empty;
-        if (userIdGuid == Guid.Empty)
-        {
-            _logger.LogWarning("User ID not found in token");
-            return Unauthorized();
-        }
-        
+    {        
         try
         {
-            _logger.LogInformation("Getting all transactions for user {UserId}", userIdGuid);
+            _logger.LogInformation("Getting all transactions for user {UserId}", userId);
 
-            var transactions = await _financeService.GetTransactionsAsync(userIdGuid);
+            var transactions = await _financeService.GetTransactionsAsync();
 
             _logger.LogInformation("Retrieved {Count} transactions for user {UserId}",
-                transactions.Count, userIdGuid);
+                transactions.Count, userId);
             return Ok(transactions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting transactions for user {UserId}", userIdGuid);
+            _logger.LogError(ex, "Error getting transactions for user {UserId}", userId);
             return StatusCode(500, new { message = "İşlemler getirilirken bir hata oluştu" });
         }
     }
@@ -107,13 +118,12 @@ public class TransactionsController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Creating new transaction for user {UserId}",
-                transactionDto.PersonId);
+            _logger.LogInformation("Creating new transaction for user {UserId}", userId);
 
             var created = await _financeService.CreateTransactionAsync(transactionDto);
 
             _logger.LogInformation("Created transaction {TransactionId} for user {UserId}",
-                created.Id, created.PersonId);
+                created.Id, userId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (BadRequestException ex)
@@ -124,7 +134,7 @@ public class TransactionsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating transaction for user {UserId}",
-                transactionDto.PersonId);
+                userId);
             return StatusCode(500, new { message = "İşlem oluşturulurken bir hata oluştu" });
         }
     }

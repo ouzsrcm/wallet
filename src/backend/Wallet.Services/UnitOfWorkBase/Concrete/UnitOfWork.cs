@@ -34,6 +34,7 @@ public class UnitOfWork : IUnitOfWork
             {typeof(Receipt), new BaseRepository<Receipt>(_context)},
             {typeof(ReceiptItem), new BaseRepository<ReceiptItem>(_context)},
             {typeof(Language), new BaseRepository<Language>(_context)},
+            {typeof(Currency), new BaseRepository<Currency>(_context)},
         };
     }
 

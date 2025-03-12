@@ -66,12 +66,13 @@ public class AuthService : IAuthService
         {
             User = new AuthUserDto
             {
-                Id = user.PersonId,
+                Id = user.Id,
                 Username = user.Credential.Username,
                 Email = user.Credential.Email ?? "",
                 FirstName = user.Person?.FirstName ?? "",
                 LastName = user.Person?.LastName ?? ""
             },
+            PersonId = user.PersonId,
             Token = token,
             RefreshToken = refreshToken
         };
