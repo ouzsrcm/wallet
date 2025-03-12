@@ -1,0 +1,50 @@
+{
+  "name": "walletpro-website",
+  "version": "1.0.0",
+  "description": "A modern, responsive single-page website for a wallet application with attractive animations",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=8080",
+    "build": "node build.js",
+    "lint": "eslint script.js",
+    "lint:fix": "eslint script.js --fix",
+    "stylelint": "stylelint styles.css",
+    "stylelint:fix": "stylelint styles.css --fix",
+    "validate": "html-validate index.html",
+    "test": "npm run lint && npm run stylelint && npm run validate",
+    "serve:dist": "serve dist",
+    "init": "node init.js",
+    "postinstall": "echo \"Run 'npm run init' to set up your project\""
+  },
+  "keywords": [
+    "wallet",
+    "finance",
+    "responsive",
+    "single-page",
+    "website",
+    "animation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "html-validate": "^8.8.0",
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1",
+    "stylelint": "^16.2.1",
+    "stylelint-config-standard": "^36.0.0"
+  },
+  "dependencies": {
+    "aos": "^2.3.4",
+    "font-awesome": "^4.7.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+} 

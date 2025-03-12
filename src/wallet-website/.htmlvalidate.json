@@ -1,0 +1,13 @@
+{
+  "extends": [
+    "html-validate:recommended"
+  ],
+  "rules": {
+    "element-required-attributes": "error",
+    "no-trailing-whitespace": "error",
+    "void-style": ["error", {"style": "selfclosing"}],
+    "attr-quotes": ["error", {"style": "double"}],
+    "doctype-style": ["error", {"style": "html5"}],
+    "no-missing-references": "error"
+  }
+} 

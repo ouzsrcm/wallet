@@ -1,0 +1,30 @@
+.category-tree {
+    margin-top: 20px;
+}
+
+.category-node {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.category-node:hover {
+    background-color: #f0f0f0;
+}
+
+.category-node button {
+    margin-left: 5px;
+}
+
+.color-preview {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border: 1px solid #d9d9d9;
+} 
