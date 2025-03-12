@@ -93,6 +93,7 @@ const TransactionsPage: React.FC = () => {
     };
 
     const handleEdit = (transaction: TransactionDto) => {
+        console.log(transaction);
         setEditingTransaction(transaction);
         setIsModalVisible(true);
     };
@@ -176,6 +177,7 @@ const TransactionsPage: React.FC = () => {
         {
             title: 'Actions',
             key: 'actions',
+            dataIndex: 'actions',
             render: (_, record) => (
                 <span>
                     <Button onClick={() => handleEdit(record)}>Edit</Button>
@@ -198,7 +200,17 @@ const TransactionsPage: React.FC = () => {
                 width={800}
             >
                 <Form
-                    initialValues={editingTransaction || { description: '', amount: 0, currency: 'USD' }}
+                    initialValues={{
+                        description: editingTransaction?.description,
+                        amount: editingTransaction?.amount, 
+                        currency: editingTransaction?.currency,
+                        transactionDate: editingTransaction?.transactionDate,
+                        type: editingTransaction?.type,
+                        paymentMethod: editingTransaction?.paymentMethod,
+                        reference: editingTransaction?.reference,
+                        isRecurring: editingTransaction?.isRecurring,
+                        recurringPeriod: editingTransaction?.recurringPeriod
+                    }}
                     onFinish={handleOk}
                     layout="horizontal"
                     labelCol={{ span: 8 }}
@@ -207,7 +219,7 @@ const TransactionsPage: React.FC = () => {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-                                <Input />
+                                <Input placeholder="Description" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -276,9 +288,6 @@ const TransactionsPage: React.FC = () => {
                         <Col span={12}>
                             <Form.Item name="reference" label="Reference">
                                 <Input />
-                                <small>
-                                    (Fatura no, sipariş no vs.)
-                                </small>
                             </Form.Item>
                         </Col>
                     </Row>

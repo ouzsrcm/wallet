@@ -152,7 +152,8 @@ public class FinanceService : IFinanceService
                     IsRecurring = t.IsRecurring,
                     RecurringPeriod = t.RecurringPeriod,
                     CategoryId = t.CategoryId,
-                    CategoryName = t.Category.Name
+                    CategoryName = t.Category.Name,
+                    PersonId = t.PersonId
                 });
 
         if (transaction == null || !transaction.Any())
