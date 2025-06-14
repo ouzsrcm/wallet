@@ -5,24 +5,43 @@ using Wallet.Services.Abstract;
 using Wallet.Services.DTOs.Person;
 using Wallet.Services.UnitOfWorkBase.Abstract;
 using Wallet.Services.Exceptions;
+using Wallet.Infrastructure.Abstract;
 
 namespace Wallet.Services.Concrete;
 
 public class PersonService : IPersonService
 {
     private readonly IPersonUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IMapper _mapper;
 
-    public PersonService(IPersonUnitOfWork unitOfWork, IMapper mapper)
+    public PersonService(IPersonUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
+    }
+
+    public async Task<Guid> PersonId()
+    {
+        var userId = _currentUserService.GetCurrentUserId() 
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        if (!Guid.TryParse(userId, out var userIdGuid))
+            throw new BadRequestException("Invalid user ID");
+
+        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userIdGuid)
+            ?? throw new NotFoundException("User not found");
+
+        return user.PersonId;
     }
 
     public async Task<PersonDto> GetPersonByIdAsync(Guid id)
     {
+        var personId = await PersonId();
+
         var person = await _unitOfWork.GetRepository<Person>()
-            .GetWhere(p => p.Id == id)
+            .GetWhere(p => p.Id == personId)
             .Select(p => new PersonDto
             {
                 Id = p.Id,
@@ -35,10 +54,7 @@ public class PersonService : IPersonService
                 TaxNumber = p.TaxNumber,
                 IdNumber = p.IdNumber
             })
-            .FirstOrDefaultAsync();
-
-        if (person == null)
-            throw new NotFoundException("Person not found");
+            .FirstOrDefaultAsync() ?? throw new NotFoundException("Person not found");
 
         return person;
     }
