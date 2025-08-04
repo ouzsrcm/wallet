@@ -7,13 +7,20 @@ namespace walletv2.Data.Services;
 public interface IUserService
 {
     Task<UserDto> Register(CreateUserDto param);
+    Task<UserDto> ValidateUser(UserLoginDto param);
 }
 
-public class UserService
+public class UserService : IUserService
 {
     private readonly IBaseRepository<User> _userRepository;
     private readonly IPasswordHasher _passwordHasher;
 
+    /// <summary>
+    /// user service constructor.
+    /// </summary>
+    /// <param name="_userRepository"></param>
+    /// <param name="passwordHasher"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public UserService(IBaseRepository<User> _userRepository, IPasswordHasher passwordHasher)
     {
         this._userRepository = _userRepository ?? throw new ArgumentNullException(nameof(_userRepository));
@@ -43,13 +50,45 @@ public class UserService
         });
         await _userRepository.SaveChangesAsync();
 
-        return (await _userRepository.FindAsync(userInfo => userInfo.id == addedUser.id)).Select(x => new UserDto
+        return (await _userRepository.FindAsync(userInfo => userInfo.Id == addedUser.Id)).Select(x => new UserDto
         {
-            Id = x.id,
+            Id = x.Id,
             Email = x.Email,
             Username = x.Username,
             FirstName = x.FirstName,
             LastName = x.LastName
         }).FirstOrDefault() ?? throw new InvalidOperationException("User not found after creation.");
     }
+
+    /// <summary>
+    /// validate user credentials and return user details if valid.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<UserDto> ValidateUser(UserLoginDto param)
+    {
+        if (string.IsNullOrEmpty(param.Email) || string.IsNullOrEmpty(param.Password))
+            throw new ArgumentNullException("Email and Password cannot be null or empty.");
+        
+        var user = await _userRepository.FindAsync(x => x.Email == param.Email);
+        
+        if (!user.Any())
+            throw new InvalidOperationException("User not found.");
+        
+        var foundUser = user.First();
+        if (!_passwordHasher.VerifyPassword(param.Password, foundUser.PasswordSalt, foundUser.PasswordHash))
+            throw new InvalidOperationException("Invalid password.");
+
+        return new UserDto
+        {
+            Id = foundUser.Id,
+            Email = foundUser.Email,
+            Username = foundUser.Username,
+            FirstName = foundUser.FirstName,
+            LastName = foundUser.LastName
+        };
+    }
+
 }
