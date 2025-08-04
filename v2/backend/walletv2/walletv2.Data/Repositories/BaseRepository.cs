@@ -45,8 +45,8 @@ public class BaseRepository<TEntity, TContext> : IBaseRepository<TEntity>
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
         entity.Create();
-        _context.Set<TEntity>().Add(entity);
-        await SaveChangesAsync();
+        await _context.Set<TEntity>().AddAsync(entity);
+        //await SaveChangesAsync();
         return entity;
     }
 
@@ -55,8 +55,8 @@ public class BaseRepository<TEntity, TContext> : IBaseRepository<TEntity>
         if (entity == null) throw new ArgumentNullException(nameof(entity));
         entity.Update();
         _context.Set<TEntity>().Update(entity);
-        await SaveChangesAsync();
-        return entity;
+        //await SaveChangesAsync();
+        return await Task.FromResult(entity);
     }
 
     public async Task DeleteAsync(Guid id)
@@ -65,7 +65,7 @@ public class BaseRepository<TEntity, TContext> : IBaseRepository<TEntity>
         if (entity == null) throw new KeyNotFoundException($"Entity with ID {id} not found.");
         entity.Delete();
         _context.Set<TEntity>().Update(entity);
-        await SaveChangesAsync();
+        //await SaveChangesAsync();
     }
 
     public async Task<bool> ExistsAsync(Guid id)

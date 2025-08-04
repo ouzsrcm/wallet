@@ -32,15 +32,21 @@ public class User : BaseEntityImplementation
     }
 
     [Required]
+    [EmailAddress]
+    [MaxLength(256)]
     public string Email { get; set; }
 
     [Required]
+    [MinLength(3)]
+    [MaxLength(100)]
     public string Username { get; set; }
 
     [Required]
     public string PasswordHash { get; set; }
 
     [Required]
+    [MinLength(6)]
+    [MaxLength(20)]
     public string PasswordSalt { get; set; }
 
     [MinLength(3)]

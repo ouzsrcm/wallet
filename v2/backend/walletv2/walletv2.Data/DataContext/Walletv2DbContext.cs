@@ -13,12 +13,9 @@ public class Walletv2DbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configure your entities here
-        // Example: modelBuilder.Entity<User>().ToTable("Users");
         base.OnModelCreating(modelBuilder);
     }
 
-    // Define DbSets for your entities
     public DbSet<User> Users { get; set; }
 
 }

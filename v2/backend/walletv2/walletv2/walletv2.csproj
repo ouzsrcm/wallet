@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\walletv2.Data\walletv2.Data.csproj" />
+  </ItemGroup>
+
 </Project>
