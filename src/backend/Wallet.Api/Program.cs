@@ -169,7 +169,18 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Request logging middleware
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+    config.UseSimpleAssemblyNameTypeSerializer();
+    config.UseRecommendedSerializerSettings();
+});
+
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
+
+app.UseHangfireDashboard("/jobs");
 
 // HTTPS yönlendirmesi ekleyin
 if (!app.Environment.IsDevelopment())
