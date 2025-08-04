@@ -3,8 +3,8 @@ import { PersonData, PersonAddress, PersonContact } from '../types/Person';
 
 export const personService = {
     // Kişi işlemleri
-    getPerson: async (id: string): Promise<PersonData> => {
-        const response = await api.get(`/Person/${id}`);
+    getPerson: async (): Promise<PersonData> => {
+        const response = await api.get(`/Person/`);
         return response.data;
     },
 

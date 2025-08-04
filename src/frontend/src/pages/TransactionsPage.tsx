@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Input, Select, message, DatePicker, Checkbox, Row, Col, Divider } from 'antd';
+import DataTable, { DataTableColumn } from '../shared/components/DataTable';
 
 import transactionService from '../services/transactionService';
 import { TransactionDto } from '../types/transaction';
@@ -92,6 +93,7 @@ const TransactionsPage: React.FC = () => {
     };
 
     const handleEdit = (transaction: TransactionDto) => {
+        console.log(transaction);
         setEditingTransaction(transaction);
         setIsModalVisible(true);
     };
@@ -122,32 +124,74 @@ const TransactionsPage: React.FC = () => {
         }
     };
 
+    const columns: DataTableColumn<TransactionDto>[] = [
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            isDate: false,
+        },
+        {
+            title: 'Amount',
+            dataIndex: 'amount',
+            key: 'amount',
+            isDate: false,
+        },
+        {
+            title: 'Currency',
+            dataIndex: 'currency',
+            key: 'currency',
+            isDate: false,
+        },
+        {
+            title: 'Transaction Date',
+            dataIndex: 'transactionDate',
+            key: 'transactionDate',
+            isDate: true,
+            dateFormat: 'DD MMM YYYY',
+        },
+        {
+            title: 'Type',
+            dataIndex: 'type',
+            key: 'type',
+            isDate: false,
+        },
+        {
+            title: 'Payment Method',
+            dataIndex: 'paymentMethod',
+            key: 'paymentMethod',
+            isDate: false,
+        },
+        {
+            title: 'Reference',
+            dataIndex: 'reference',
+            key: 'reference',
+            isDate: false,
+        },
+        {
+            title: 'Is Recurring',
+            dataIndex: 'isRecurring',
+            key: 'isRecurring',
+            isDate: false,
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            dataIndex: 'actions',
+            render: (_, record) => (
+                <span>
+                    <Button onClick={() => handleEdit(record)}>Edit</Button>
+                    <Button onClick={() => handleDelete(record.id)}>Delete</Button>
+                </span>
+            ),
+        },
+    ];
+
     return (
         <div>
             <Button type="primary" onClick={handleAdd}>Add Transaction</Button>
             <Divider />
-            <Table
-                rowKey="id"
-                dataSource={transactions}
-                loading={loading}
-                columns={[
-                    { title: 'Description', dataIndex: 'description', key: 'description' },
-                    { title: 'Amount', dataIndex: 'amount', key: 'amount' },
-                    { title: 'Currency', dataIndex: 'currency', key: 'currency' },
-                    { title: 'Transaction Date', dataIndex: 'transactionDate', key: 'transactionDate' },
-                    { title: 'Type', dataIndex: 'type', key: 'type' },
-                    { title: 'Payment Method', dataIndex: 'paymentMethod', key: 'paymentMethod' },
-                    { title: 'Reference', dataIndex: 'reference', key: 'reference' },
-                    { title: 'Is Recurring', dataIndex: 'isRecurring', key: 'isRecurring' },
-                    //{ title: 'Recurring Period', dataIndex: 'recurringPeriod', key: 'recurringPeriod' },
-                    { title: 'Actions', key: 'actions', render: (_, record) => (
-                        <span>
-                            <Button onClick={() => handleEdit(record)}>Edit</Button>
-                            <Button onClick={() => handleDelete(record.id)}>Delete</Button>
-                        </span>
-                    )}
-                ]}
-            />
+            <DataTable columns={columns} data={transactions} />
             <Modal
                 title={editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
                 open={isModalVisible}
@@ -156,7 +200,17 @@ const TransactionsPage: React.FC = () => {
                 width={800}
             >
                 <Form
-                    initialValues={editingTransaction || { description: '', amount: 0, currency: 'USD' }}
+                    initialValues={{
+                        description: editingTransaction?.description,
+                        amount: editingTransaction?.amount, 
+                        currency: editingTransaction?.currency,
+                        transactionDate: editingTransaction?.transactionDate,
+                        type: editingTransaction?.type,
+                        paymentMethod: editingTransaction?.paymentMethod,
+                        reference: editingTransaction?.reference,
+                        isRecurring: editingTransaction?.isRecurring,
+                        recurringPeriod: editingTransaction?.recurringPeriod
+                    }}
                     onFinish={handleOk}
                     layout="horizontal"
                     labelCol={{ span: 8 }}
@@ -165,7 +219,7 @@ const TransactionsPage: React.FC = () => {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-                                <Input />
+                                <Input placeholder="Description" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -234,9 +288,6 @@ const TransactionsPage: React.FC = () => {
                         <Col span={12}>
                             <Form.Item name="reference" label="Reference">
                                 <Input />
-                                <small>
-                                    (Fatura no, sipariş no vs.)
-                                </small>
                             </Form.Item>
                         </Col>
                     </Row>

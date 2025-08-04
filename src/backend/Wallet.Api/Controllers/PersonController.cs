@@ -33,7 +33,7 @@ public class PersonController : ControllerBase
     /// <remarks>
     /// Örnek istek:
     /// 
-    ///     GET /api/person/{id}
+    ///     GET /api/person
     /// 
     /// Örnek yanıt:
     /// 
@@ -62,29 +62,23 @@ public class PersonController : ControllerBase
     ///         ]
     ///     }
     /// </remarks>
-    /// <param name="id">Kişi ID</param>
-    [HttpGet("{id}")]
+    [HttpGet()]
     [ProducesResponseType(typeof(PersonDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<PersonDto>> GetPerson(Guid id)
+    public async Task<ActionResult<PersonDto>> GetPerson()
     {
         try
         {
-            _logger.LogInformation("Getting person details for {PersonId}", id);
+            _logger.LogInformation("Getting person details for {PersonId}", Guid.Empty);
             
-            var person = await _personService.GetPersonByIdAsync(id);
-            if (person == null)
-            {
-                _logger.LogWarning("Person {PersonId} not found", id);
-                return NotFound(new { message = "Person not found" });
-            }
+            var person = await _personService.GetPersonByIdAsync(Guid.Empty);
             
-            _logger.LogInformation("Retrieved person details for {PersonId}", id);
+            _logger.LogInformation("Retrieved person details for {PersonId}", Guid.Empty);
             return Ok(person);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting person details for {PersonId}", id);
+            _logger.LogError(ex, "Error getting person details for {PersonId}", Guid.Empty);
             return StatusCode(500, new { message = "Kişi bilgileri getirilirken bir hata oluştu" });
         }
     }

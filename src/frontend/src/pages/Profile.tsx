@@ -33,7 +33,7 @@ const Profile = () => {
         message.error('Kullanıcı bilgisi bulunamadı');
         return;
       }
-      const data = await personService.getPerson(user.id);
+      const data = await personService.getPerson();
       setPersonData(data);
       form.setFieldsValue({
         ...data,
