@@ -8,9 +8,7 @@ namespace walletv2.Data.DataContext;
 public class Walletv2DbContext : DbContext
 {
     public Walletv2DbContext(DbContextOptions<Walletv2DbContext> options) : base(options)
-    {
-
-    }
+    { }
 
     //TODO: bu kısım farkılı bir yere taşınacak.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,6 +36,8 @@ public class Walletv2DbContext : DbContext
     public DbSet<Currency> Currencies { get; set; }
     public DbSet<ExchangeRate> ExchangeRates { get; set; }
     public DbSet<ExchangeRateType> ExchangeRateTypes { get; set; }
+
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 }
 
 public class Walletv2DbContextFactory : IDesignTimeDbContextFactory<Walletv2DbContext>

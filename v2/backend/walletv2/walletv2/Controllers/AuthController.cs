@@ -6,7 +6,6 @@ using walletv2.Dtos;
 
 namespace walletv2.Controllers;
 
-[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class AuthController : ControllerBase
@@ -36,21 +35,23 @@ public class AuthController : ControllerBase
                 Username = param.Username ?? string.Empty,
                 Password = param.Password ?? string.Empty
             });
-            return new UserLoginResponse(res.Token, res.Expiration)
+            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
             {
                 Status = ApiResponseStatus.Success,
-                Token = res.Token,
+                AccessToken = res.AccessToken,
+                RefreshToken = res.RefreshToken,
                 Expiration = res.Expiration
             };
         }
         catch (Exception ex)
         {
-            return await Task.FromResult(new UserLoginResponse(string.Empty, default)
+            return await Task.FromResult(new UserLoginResponse(string.Empty, string.Empty, default)
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message,
                 Expiration = DateTime.MinValue,
-                Token = string.Empty
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty
             });
         }
     }
