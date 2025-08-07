@@ -77,7 +77,7 @@ public class UserService : IUserService
         if (!user.Any())
             throw new InvalidOperationException("User not found.");
 
-        var foundUser = user.First();
+        var foundUser = user.FirstOrDefault();
         if (!_passwordHasher.VerifyPassword(param.Password, foundUser.PasswordSalt, foundUser.PasswordHash))
             throw new InvalidOperationException("Invalid password.");
 
@@ -114,8 +114,8 @@ public class UserService : IUserService
             Email = foundUser.Email,
             Username = foundUser.Username,
             Fullname = $"{foundUser.FirstName} {foundUser.LastName}",
-            //FirstName = foundUser.FirstName,
-            //LastName = foundUser.LastName,
+            FirstName = foundUser.FirstName,
+            LastName = foundUser.LastName,
             Address = foundUser.Address,
             City = foundUser.City,
             PhoneNumber = foundUser.PhoneNumber ?? string.Empty,

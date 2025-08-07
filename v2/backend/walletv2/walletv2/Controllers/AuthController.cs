@@ -26,6 +26,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
+    [AllowAnonymous]
     public async Task<UserLoginResponse> Login([FromBody] UserLoginRequest param)
     {
         try
@@ -56,4 +57,39 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// refresh JWT token using the provided refresh token.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
+    [AllowAnonymous]
+    public async Task<UserLoginResponse> RefreshToken([FromBody] RefreshTokenRequest param)
+    {
+        try
+        {
+            var res = await _authService.GenerateTokenByRefreshToken(param.RefreshToken);
+            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
+            {
+                Status = ApiResponseStatus.Success,
+                AccessToken = res.AccessToken,
+                RefreshToken = res.RefreshToken,
+                Expiration = res.Expiration
+            };
+        }
+        catch (Exception ex)
+        {
+            return new UserLoginResponse(string.Empty, string.Empty, DateTime.MinValue)
+            {
+                Status = ApiResponseStatus.Error,
+                Message = ex.Message,
+                Expiration = DateTime.MinValue,
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty
+            };
+        }
+    }
 }

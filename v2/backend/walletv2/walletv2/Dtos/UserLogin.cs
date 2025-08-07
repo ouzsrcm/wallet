@@ -19,3 +19,8 @@ public class UserLoginResponse : BaseResponseDto
     public required string RefreshToken { get; set; }
     public required DateTime Expiration { get; set; }
 }
+
+public class RefreshTokenRequest : BaseRequestDto
+{
+    public required string RefreshToken { get; set; }
+}
