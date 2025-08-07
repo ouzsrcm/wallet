@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using walletv2.Data.Entities.DataTransferObjects;
 using walletv2.Data.Services;
 using walletv2.Dtos;
@@ -6,6 +7,7 @@ using walletv2.Extensions;
 
 namespace walletv2.Controllers;
 
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class UserController : ControllerBase
