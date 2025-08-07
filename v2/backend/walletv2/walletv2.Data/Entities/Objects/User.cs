@@ -42,11 +42,13 @@ public class User : BaseEntityImplementation
     public string Username { get; set; }
 
     [Required]
+    [MinLength(60)]
+    [MaxLength(500)]
     public string PasswordHash { get; set; }
 
     [Required]
     [MinLength(6)]
-    [MaxLength(20)]
+    [MaxLength(500)]
     public string PasswordSalt { get; set; }
 
     [MinLength(3)]

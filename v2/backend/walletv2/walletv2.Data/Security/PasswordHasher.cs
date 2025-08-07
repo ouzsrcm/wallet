@@ -3,6 +3,11 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 public interface IPasswordHasher
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="password"></param>
+    /// <returns>1. : salt 2. : hash</returns>
     (string, string) HashPassword(string password);
     bool VerifyPassword(string password, string saltBase64, string hashBase64);
 }
@@ -31,19 +36,16 @@ public class PasswordHasher : IPasswordHasher
             iterationCount: Iterations,
             numBytesRequested: KeySize);
 
-        var outputBytes = new byte[SaltSize + KeySize];
-        Buffer.BlockCopy(salt, 0, outputBytes, 0, SaltSize);
-        Buffer.BlockCopy(key, 0, outputBytes, SaltSize, KeySize);
-
         return (
             Convert.ToBase64String(salt),
-            Convert.ToBase64String(outputBytes)
-            );
+            Convert.ToBase64String(key)
+        );
     }
 
     public bool VerifyPassword(string password, string saltBase64, string hashBase64)
     {
         var salt = Convert.FromBase64String(saltBase64);
+        var expectedHash = Convert.FromBase64String(hashBase64);
 
         var keyToCheck = KeyDerivation.Pbkdf2(
             password: password,
@@ -52,9 +54,7 @@ public class PasswordHasher : IPasswordHasher
             iterationCount: Iterations,
             numBytesRequested: KeySize);
 
-        return CryptographicOperations.FixedTimeEquals(
-            Convert.FromBase64String(hashBase64),
-            keyToCheck
-        );
+        return CryptographicOperations.FixedTimeEquals(expectedHash, keyToCheck);
     }
+
 }

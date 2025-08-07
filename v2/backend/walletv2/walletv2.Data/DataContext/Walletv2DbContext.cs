@@ -12,6 +12,7 @@ public class Walletv2DbContext : DbContext
 
     }
 
+    //TODO: bu kısım farkılı bir yere taşınacak.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -37,7 +38,6 @@ public class Walletv2DbContext : DbContext
     public DbSet<Currency> Currencies { get; set; }
     public DbSet<ExchangeRate> ExchangeRates { get; set; }
     public DbSet<ExchangeRateType> ExchangeRateTypes { get; set; }
-
 }
 
 public class Walletv2DbContextFactory : IDesignTimeDbContextFactory<Walletv2DbContext>

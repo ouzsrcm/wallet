@@ -34,12 +34,19 @@ public static class DbSeeder
                 PasswordHash = hash,
                 IsEmailVerified = true,
                 IsPhoneNumberVerified = true,
-                DateOfBirth = new DateTime(1990, 1, 1),
-                LastLogin = DateTime.UtcNow
+                DateOfBirth = new DateTime(1990, 1, 1).ToUniversalTime(),
+                LastLogin = DateTime.UtcNow,
             };
 
             await context.Users.AddAsync(adminUser);
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (Exception x)
+            {
+                throw;
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ public interface IUserService
 {
     Task<UserDto> Register(CreateUserDto param);
     Task<UserDto> ValidateUser(UserLoginDto param);
+    Task<UserDetailedInfoDto> GetUserDetails(Guid userId);
 }
 
 public class UserService : IUserService
@@ -69,14 +70,13 @@ public class UserService : IUserService
     /// <exception cref="InvalidOperationException"></exception>
     public async Task<UserDto> ValidateUser(UserLoginDto param)
     {
-        if (string.IsNullOrEmpty(param.Email) || string.IsNullOrEmpty(param.Password))
-            throw new ArgumentNullException("Email and Password cannot be null or empty.");
-        
-        var user = await _userRepository.FindAsync(x => x.Email == param.Email);
-        
+        if (string.IsNullOrEmpty(param.Password))
+            throw new ArgumentNullException("Username and Password cannot be null or empty.");
+
+        var user = await _userRepository.FindAsync(x => x.Username == param.Username);
         if (!user.Any())
             throw new InvalidOperationException("User not found.");
-        
+
         var foundUser = user.First();
         if (!_passwordHasher.VerifyPassword(param.Password, foundUser.PasswordSalt, foundUser.PasswordHash))
             throw new InvalidOperationException("Invalid password.");
@@ -88,6 +88,43 @@ public class UserService : IUserService
             Username = foundUser.Username,
             FirstName = foundUser.FirstName,
             LastName = foundUser.LastName
+        };
+    }
+
+    /// <summary>
+    /// get detailed user information by user ID.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<UserDetailedInfoDto> GetUserDetails(Guid userId)
+    {
+        var user = await _userRepository.FindAsync(x => x.Id == userId);
+
+        if (!user.Any())
+            throw new InvalidOperationException("User not found.");
+
+        var foundUser = user.First();
+        if (foundUser.isDeleted)
+            throw new InvalidOperationException("User account is deleted.");
+
+        return new UserDetailedInfoDto
+        {
+            Id = foundUser.Id,
+            Email = foundUser.Email,
+            Username = foundUser.Username,
+            Fullname = $"{foundUser.FirstName} {foundUser.LastName}",
+            //FirstName = foundUser.FirstName,
+            //LastName = foundUser.LastName,
+            Address = foundUser.Address,
+            City = foundUser.City,
+            PhoneNumber = foundUser.PhoneNumber ?? string.Empty,
+            ProfilePictureUrl = foundUser.ProfilePictureUrl,
+            Bio = foundUser.Bio,
+            DateOfBirth = foundUser.DateOfBirth,
+            isEmailVerified = foundUser.IsEmailVerified,
+            isPhoneNumberVerified = foundUser.IsPhoneNumberVerified,
+            LastLogin = foundUser.LastLogin
         };
     }
 

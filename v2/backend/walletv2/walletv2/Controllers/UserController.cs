@@ -2,6 +2,7 @@
 using walletv2.Data.Entities.DataTransferObjects;
 using walletv2.Data.Services;
 using walletv2.Dtos;
+using walletv2.Extensions;
 
 namespace walletv2.Controllers;
 
@@ -21,6 +22,9 @@ public class UserController : ControllerBase
     /// <param name="param"></param>
     /// <returns></returns>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status500InternalServerError)]
     public async Task<RegisterUserResponse> RegisterUser([FromBody] RegisterUserRequest param)
     {
         try
@@ -40,6 +44,35 @@ public class UserController : ControllerBase
         catch (Exception ex)
         {
             return new RegisterUserResponse()
+            {
+                Status = ApiResponseStatus.Error,
+                Message = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// user profile details.
+    /// </summary>
+    /// <returns>UserDetailResponseDto</returns>
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<UserDetailResponseDto> Profile()
+    {
+        try
+        {
+            var details = _userService.GetUserDetails(User.GetUserId());
+            return new UserDetailResponseDto()
+            {
+                Status = ApiResponseStatus.Success,
+                User = await details
+            };
+        }
+        catch (Exception ex)
+        {
+            return new UserDetailResponseDto()
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message

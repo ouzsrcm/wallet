@@ -9,7 +9,6 @@ namespace walletv2.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-
     private readonly IAuthService _authService;
 
     public AuthController(IAuthService _authService)
@@ -18,11 +17,14 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// 
+    /// login user with the provided credentials.
     /// </summary>
     /// <param name="param"></param>
     /// <returns></returns>
     [HttpPost("login")]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
     public async Task<UserLoginResponse> Login([FromBody] UserLoginRequest param)
     {
         try

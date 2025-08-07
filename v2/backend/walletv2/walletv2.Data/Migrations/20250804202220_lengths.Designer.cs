@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using walletv2.Data.DataContext;
@@ -11,9 +12,11 @@ using walletv2.Data.DataContext;
 namespace walletv2.Data.Migrations
 {
     [DbContext(typeof(Walletv2DbContext))]
-    partial class Walletv2DbContextModelSnapshot : ModelSnapshot
+    [Migration("20250804202220_lengths")]
+    partial class lengths
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
