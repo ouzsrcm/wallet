@@ -24,7 +24,7 @@ public class User : BaseEntityImplementation
     /// <param name="passwordHash">The hashed representation of the user's password. Cannot be null or empty.</param>
     public User(Guid id, string email, string username, string passwordSalt, string passwordHash)
     {
-        this.id = id;
+        this.Id = id;
         Email = email;
         Username = username;
         PasswordHash = passwordHash;
@@ -32,15 +32,23 @@ public class User : BaseEntityImplementation
     }
 
     [Required]
+    [EmailAddress]
+    [MaxLength(256)]
     public string Email { get; set; }
 
     [Required]
+    [MinLength(3)]
+    [MaxLength(100)]
     public string Username { get; set; }
 
     [Required]
+    [MinLength(60)]
+    [MaxLength(500)]
     public string PasswordHash { get; set; }
 
     [Required]
+    [MinLength(6)]
+    [MaxLength(500)]
     public string PasswordSalt { get; set; }
 
     [MinLength(3)]

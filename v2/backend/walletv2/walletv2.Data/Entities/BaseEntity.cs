@@ -4,7 +4,7 @@ namespace walletv2.Data.Entities;
 public interface IBaseEntity
 {
     [Key]
-    Guid id { get; set; }
+    Guid Id { get; set; }
     DateTime createdAt { get; set; }
     Guid? createdById { get; set; }
     void Create();
@@ -24,7 +24,7 @@ public interface IBaseEntity
 
 public class BaseEntityImplementation : IBaseEntity
 {
-    public Guid id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime createdAt { get; set; } = DateTime.UtcNow;
     public Guid? createdById { get; set; }
     public Guid? deletedById { get; set; }
