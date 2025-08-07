@@ -11,10 +11,12 @@ namespace walletv2.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ICurrencyService currencyService;
 
-    public AuthController(IAuthService _authService)
+    public AuthController(IAuthService _authService, ICurrencyService currencyService)
     {
         this._authService = _authService ?? throw new ArgumentNullException(nameof(_authService));
+        this.currencyService = currencyService;
     }
 
     /// <summary>
@@ -31,6 +33,9 @@ public class AuthController : ControllerBase
     {
         try
         {
+
+            await currencyService.UpdateDailyRates();
+
             var res = await _authService.Login(new UserLoginDto
             {
                 Username = param.Username ?? string.Empty,

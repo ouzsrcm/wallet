@@ -19,3 +19,4 @@ public class ExchangeRateDto
     public decimal Rate { get; set; }
     public DateTime RateDate { get; set; }
 }
+
