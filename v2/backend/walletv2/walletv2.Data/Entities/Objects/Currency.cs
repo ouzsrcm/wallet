@@ -7,12 +7,12 @@ public class Currency : BaseEntityImplementation
     [Required]
     [MinLength(3)]
     [MaxLength(3)]
-    public required string CurrencyCode { get; set; }
+    public string? CurrencyCode { get; set; }
 
     [Required]
     [MinLength(3)]
     [MaxLength(50)]
-    public required string CurrencyName { get; set; }
+    public string? CurrencyName { get; set; }
 
     [Required]
     public bool IsLocal { get; set; }
@@ -23,7 +23,7 @@ public class ExchangeRateType : BaseEntityImplementation
     [Required]
     [MinLength(3)]
     [MaxLength(100)]
-    public required string TypeName { get; set; }
+    public string? TypeName { get; set; }
 }
 
 public class ExchangeRate : BaseEntityImplementation

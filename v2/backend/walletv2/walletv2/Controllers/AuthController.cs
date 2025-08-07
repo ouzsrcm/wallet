@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using walletv2.Data.Entities.DataTransferObjects;
 using walletv2.Data.Services;
 using walletv2.Dtos;
@@ -10,10 +11,12 @@ namespace walletv2.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ICurrencyService currencyService;
 
-    public AuthController(IAuthService _authService)
+    public AuthController(IAuthService _authService, ICurrencyService currencyService)
     {
         this._authService = _authService ?? throw new ArgumentNullException(nameof(_authService));
+        this.currencyService = currencyService;
     }
 
     /// <summary>
@@ -25,32 +28,73 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
+    [AllowAnonymous]
     public async Task<UserLoginResponse> Login([FromBody] UserLoginRequest param)
     {
         try
         {
+
+            await currencyService.UpdateDailyRates();
+
             var res = await _authService.Login(new UserLoginDto
             {
                 Username = param.Username ?? string.Empty,
                 Password = param.Password ?? string.Empty
             });
-            return new UserLoginResponse(res.Token, res.Expiration)
+            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
             {
                 Status = ApiResponseStatus.Success,
-                Token = res.Token,
+                AccessToken = res.AccessToken,
+                RefreshToken = res.RefreshToken,
                 Expiration = res.Expiration
             };
         }
         catch (Exception ex)
         {
-            return await Task.FromResult(new UserLoginResponse(string.Empty, default)
+            return await Task.FromResult(new UserLoginResponse(string.Empty, string.Empty, default)
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message,
                 Expiration = DateTime.MinValue,
-                Token = string.Empty
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty
             });
         }
     }
 
+    /// <summary>
+    /// refresh JWT token using the provided refresh token.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
+    [AllowAnonymous]
+    public async Task<UserLoginResponse> RefreshToken([FromBody] RefreshTokenRequest param)
+    {
+        try
+        {
+            var res = await _authService.GenerateTokenByRefreshToken(param.RefreshToken);
+            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
+            {
+                Status = ApiResponseStatus.Success,
+                AccessToken = res.AccessToken,
+                RefreshToken = res.RefreshToken,
+                Expiration = res.Expiration
+            };
+        }
+        catch (Exception ex)
+        {
+            return new UserLoginResponse(string.Empty, string.Empty, DateTime.MinValue)
+            {
+                Status = ApiResponseStatus.Error,
+                Message = ex.Message,
+                Expiration = DateTime.MinValue,
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty
+            };
+        }
+    }
 }

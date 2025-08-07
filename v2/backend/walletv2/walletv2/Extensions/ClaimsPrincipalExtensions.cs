@@ -1,5 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace walletv2.Extensions;
 
@@ -7,7 +6,7 @@ public static class ClaimsPrincipalExtensions
 {
     public static Guid GetUserId(this ClaimsPrincipal user)
     {
-        var userIdClaim = user?.FindFirst(JwtRegisteredClaimNames.Sub);
+        var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
             return userId;
 
@@ -21,5 +20,4 @@ public static class ClaimsPrincipalExtensions
     {
         return user?.FindFirst(ClaimTypes.Email)?.Value;
     }
-
 }
