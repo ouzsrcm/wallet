@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using walletv2.Data.Entities.Models;
 
 namespace walletv2.Data.Proxies;
@@ -16,12 +15,14 @@ public interface ICurrencyProxy
 
 public class CurrencyProxy : ICurrencyProxy
 {
-    private HttpClient client;
+    private readonly HttpClient client;
 
     public CurrencyProxy()
     {
-        client = new HttpClient();
-        client.BaseAddress = new Uri("https://www.tcmb.gov.tr/kurlar/today.xml");
+        client = new HttpClient
+        {
+            BaseAddress = new Uri("https://www.tcmb.gov.tr/kurlar/today.xml")
+        };
     }
 
     /// <summary>

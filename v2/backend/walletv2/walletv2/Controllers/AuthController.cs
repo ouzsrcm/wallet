@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
         try
         {
 
-            await currencyService.UpdateDailyRates();
+            //await currencyService.UpdateDailyRates();
 
             var res = await _authService.Login(new UserLoginDto
             {

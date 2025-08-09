@@ -30,12 +30,28 @@ public class Walletv2DbContext : DbContext
         modelBuilder.Entity<ExchangeRate>()
             .HasIndex(er => new { er.CurrencyId, er.ExchangeRateTypeId, er.RateDate })
             .IsUnique();
+
+        modelBuilder.Entity<Cashflow>()
+            .HasIndex(cf => new
+            {
+                cf.UserId,
+                cf.CashflowTypeId
+            })
+            .IsUnique();
     }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Currency> Currencies { get; set; }
     public DbSet<ExchangeRate> ExchangeRates { get; set; }
     public DbSet<ExchangeRateType> ExchangeRateTypes { get; set; }
+
+    public DbSet<Account> Accounts { get; set; }
+    public DbSet<Cashflow> Cashflows { get; set; }
+    public DbSet<CashflowType> CashflowTypes { get; set; }
+    public DbSet<IncomeExpense> IncomeExpenses { get; set; }
+    public DbSet<IncomeExpenseType> IncomeExpenseTypes { get; set; }
+    public DbSet<CashflowDocument> CashflowDocuments { get; set; }
+
 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 }
