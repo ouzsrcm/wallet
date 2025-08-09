@@ -18,14 +18,14 @@ public interface IWalletService
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    Task CreateAccountAsync(CreateAccountDto model);
+    Task<Guid> CreateAccountAsync(CreateAccountDto model);
 
     /// <summary>
     /// create a new income/expense record.
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    Task CreateIncomeExpenseAsync(CreateIncomeExpenseDto model);
+    Task<Guid> CreateIncomeExpenseAsync(CreateIncomeExpenseDto model);
 }
 
 /// <summary>
@@ -78,7 +78,7 @@ public class WalletService : IWalletService
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException"></exception>
-    public async Task CreateAccountAsync(CreateAccountDto model)
+    public async Task<Guid> CreateAccountAsync(CreateAccountDto model)
     {
         if (model == null)
             throw new ArgumentNullException(nameof(model));
@@ -92,13 +92,15 @@ public class WalletService : IWalletService
         if (string.IsNullOrWhiteSpace(model.Name) || model.Name.Length < 3 || model.Name.Length > 100)
             throw new ArgumentException("Name must be between 3 and 100 characters.", nameof(model.Name));
 
-        await _accountRepository.AddAsync(new Account
+        var res = await _accountRepository.AddAsync(new Account
         {
             CurrencyId = model.CurrencyId,
             UserId = model.UserId,
             Name = model.Name
         });
         await _accountRepository.SaveChangesAsync();
+
+        return res.Id;
     }
 
     /// <summary>
@@ -202,7 +204,7 @@ public class WalletService : IWalletService
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public async Task CreateIncomeExpenseAsync(CreateIncomeExpenseDto model)
+    public async Task<Guid> CreateIncomeExpenseAsync(CreateIncomeExpenseDto model)
     {
         if (model == null)
             throw new ArgumentNullException(nameof(model));
@@ -216,7 +218,7 @@ public class WalletService : IWalletService
         if (string.IsNullOrWhiteSpace(model.Description) || model.Description.Length < 3 || model.Description.Length > 500)
             throw new ArgumentException("Description must be between 3 and 500 characters.", nameof(model.Description));
 
-        await _incomeExpenseRepository.AddAsync(new IncomeExpense
+        var res = await _incomeExpenseRepository.AddAsync(new IncomeExpense
         {
             UserId = model.UserId,
             IncomeExpenseTypeId = model.IncomeExpenseTypeId,
@@ -226,5 +228,7 @@ public class WalletService : IWalletService
         });
 
         await _incomeExpenseRepository.SaveChangesAsync();
+
+        return res.Id;
     }
 }

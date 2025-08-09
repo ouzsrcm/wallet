@@ -27,7 +27,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<RegisterUserResponse> RegisterUser([FromBody] RegisterUserRequest param)
+    public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest param)
     {
         try
         {
@@ -37,19 +37,19 @@ public class UserController : ControllerBase
                 Username = param.Username ?? string.Empty,
                 Password = param.Password
             });
-            return new RegisterUserResponse()
+            return Ok(new RegisterUserResponse()
             {
                 Status = res == null ? ApiResponseStatus.Error : ApiResponseStatus.Success,
                 UserId = res?.Id,
-            };
+            });
         }
         catch (Exception ex)
         {
-            return new RegisterUserResponse()
+            return BadRequest(new RegisterUserResponse()
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message
-            };
+            });
         }
     }
 
@@ -61,24 +61,24 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status500InternalServerError)]
-    public async Task<UserDetailResponseDto> Profile()
+    public async Task<IActionResult> Profile()
     {
         try
         {
             var details = _userService.GetUserDetails(User.GetUserId());
-            return new UserDetailResponseDto()
+            return Ok(new UserDetailResponseDto()
             {
                 Status = ApiResponseStatus.Success,
                 User = await details
-            };
+            });
         }
         catch (Exception ex)
         {
-            return new UserDetailResponseDto()
+            return BadRequest(new UserDetailResponseDto()
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message
-            };
+            });
         }
     }
 }
