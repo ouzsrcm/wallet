@@ -26,6 +26,27 @@ public interface IWalletService
     /// <param name="model"></param>
     /// <returns></returns>
     Task<Guid> CreateIncomeExpenseAsync(CreateIncomeExpenseDto model);
+
+    /// <summary>
+    /// list of the income and expense records for a user.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<IncomeExpenseListDto> GetListOfIncomeExpenseAsync(Guid userId);
+
+    /// <summary>
+    /// list of all accounts.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<IncomeExpenseTypeListDto> GetIncomeExpenseTypeListAsync();
+
+    /// <summary>
+    /// list of all cashflow types for a user.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<CashflowListDto> GetCashflowListAsync(GetCashflowListDto model);
 }
 
 /// <summary>
@@ -41,6 +62,9 @@ public class WalletService : IWalletService
     private readonly IBaseRepository<ExchangeRateType> _exchangeRateTypeRepository;
     private readonly IBaseRepository<CashflowDocument> _cashflowDocumentRepository;
     private readonly IBaseRepository<IncomeExpense> _incomeExpenseRepository;
+    private readonly IBaseRepository<IncomeExpenseType> _incomeExpenseTypeRepository;
+
+    private readonly IUserService _userService;
 
     /// <summary>
     /// default expense types for cashflow.
@@ -59,7 +83,9 @@ public class WalletService : IWalletService
                             IBaseRepository<ExchangeRate> _exchangeRateRepository,
                             IBaseRepository<ExchangeRateType> _exchangeRateTypeRepository,
                             IBaseRepository<CashflowDocument> _cashflowDocumentRepository,
-                            IBaseRepository<IncomeExpense> _incomeExpenseRepository)
+                            IBaseRepository<IncomeExpense> _incomeExpenseRepository,
+                            IBaseRepository<IncomeExpenseType> _incomeExpenseTypeRepository,
+                            IUserService _userService)
     {
         this._cashflowTypeRepository = _cashflowTypeRepository ?? throw new ArgumentNullException(nameof(_cashflowTypeRepository));
         this._cashflowRepository = _cashflowRepository ?? throw new ArgumentNullException(nameof(_cashflowRepository));
@@ -69,6 +95,9 @@ public class WalletService : IWalletService
         this._incomeExpenseRepository = _incomeExpenseRepository ?? throw new ArgumentNullException(nameof(_incomeExpenseRepository));
         this._exchangeRateTypeRepository = _exchangeRateTypeRepository ?? throw new ArgumentNullException(nameof(_exchangeRateTypeRepository));
         this._cashflowDocumentRepository = _cashflowDocumentRepository ?? throw new ArgumentNullException(nameof(_cashflowDocumentRepository));
+        this._incomeExpenseTypeRepository = _incomeExpenseTypeRepository;
+
+        this._userService = _userService ?? throw new ArgumentNullException(nameof(_userService));
     }
 
     /// <summary>
@@ -230,5 +259,124 @@ public class WalletService : IWalletService
         await _incomeExpenseRepository.SaveChangesAsync();
 
         return res.Id;
+    }
+
+    /// <summary>
+    /// get parent child list of all incomes and expenses.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<IncomeExpenseListDto> GetListOfIncomeExpenseAsync(Guid userId)
+    {
+        if (await _incomeExpenseRepository.AnyAsync(x => !x.isDeleted))
+            throw new Exception("can't find list income/expense. ");
+
+        if (userId == Guid.Empty)
+            throw new ArgumentNullException(nameof(userId));
+
+        var userRes = _userService.GetUserDetails(userId);
+        if (userRes == null)
+            throw new ArgumentNullException(nameof(userRes));
+        var user = await userRes;
+
+        var res = _incomeExpenseRepository.JoinWith(
+                await _incomeExpenseTypeRepository.FindAsync(x => !x.isDeleted),
+                y => y.IncomeExpenseTypeId,
+                z => z.Id,
+                (y, z) => new IncomeExpenseDto()
+                {
+                    IncomeExpenseId = y.Id,
+                    Icon = y.Icon,
+                    ParentId = y.ParentId,
+                    Name = y.Name ?? string.Empty,
+                    IncomeExpenseTypeDescription = z.Description ?? string.Empty,
+                    IncomeExpenseTypeName = z.Name ?? string.Empty,
+                }).ToList();
+
+        return new IncomeExpenseListDto()
+        {
+            UserId = userId,
+            Items = res
+        };
+    }
+
+    /// <summary>
+    /// list of all income and expense types.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public async Task<IncomeExpenseTypeListDto> GetIncomeExpenseTypeListAsync()
+    {
+        var res = await _incomeExpenseTypeRepository.FindAsync(x => !x.isDeleted);
+        if (res == null || !res.Any())
+            throw new InvalidOperationException("No income/expense types found.");
+        var items = res.Select(x => new IncomeExpenseTypeDto()
+        {
+            IncomeExpenseTypeId = x.Id,
+            Name = x.Name ?? string.Empty,
+            Description = x.Description ?? string.Empty,
+        });
+        return new IncomeExpenseTypeListDto()
+        {
+            Items = items
+        };
+    }
+
+    /// <summary>
+    /// get list of all cashflow records for a user.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task<CashflowListDto> GetCashflowListAsync(GetCashflowListDto model)
+    {
+        if (model.UserId == Guid.Empty)
+            throw new ArgumentNullException(nameof(model.UserId));
+
+        var userRes = _userService.GetUserDetails(model.UserId);
+        if (userRes == null)
+            throw new ArgumentNullException(nameof(userRes));
+        var user = await userRes;
+
+        if (await _cashflowRepository.AnyAsync(x => x.UserId == model.UserId && !x.isDeleted))
+            throw new Exception("can't find cashflows for this user");
+
+        var cf = _cashflowRepository.TableNoTracking;
+        var cfType = _cashflowTypeRepository.TableNoTracking;
+        var currency = _currencyRepository.TableNoTracking;
+        var documents = _cashflowDocumentRepository.TableNoTracking;
+
+        var res = cf.Join(
+            cfType,
+            x => x.CashflowTypeId,
+            y => y.Id,
+            (x, y) => new CashflowDto()
+            {
+                CashflowId = x.Id,
+                UserId = x.UserId,
+                CashflowTypeId = x.CashflowTypeId,
+                CashflowTypeName = y.Name ?? string.Empty,
+                Description = x.Description ?? string.Empty,
+                Credit = x.Credit,
+                Debit = x.Debit,
+                CurrencyId = x.CurrencyId,
+                CurrencyRate = x.CurrencyRate,
+                CurrencyCode = currency.Where(currency => currency.Id == x.CurrencyId).FirstOrDefault().CurrencyCode ?? string.Empty,
+                CurrencyName = currency.Where(currency => currency.Id == x.CurrencyId).FirstOrDefault().CurrencyName ?? string.Empty,
+                CreditTRY = x.CreditTRY,
+                DebitTRY = x.DebitTRY,
+                DocumentNumber = documents.Where(doc => doc.CashflowId == x.Id).FirstOrDefault().DocumentNumber ?? string.Empty,
+                CreatedAt = x.createdAt
+            });
+
+        return new CashflowListDto()
+        {
+            UserId = model.UserId,
+            Items = null
+        };
     }
 }

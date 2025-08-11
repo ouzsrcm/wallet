@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR.Protocol;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace walletv2.Data.Entities.Objects;
 

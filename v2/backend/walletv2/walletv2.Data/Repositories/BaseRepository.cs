@@ -7,6 +7,9 @@ namespace walletv2.Data.Repositories;
 
 public interface IBaseRepository<T> where T : IBaseEntity, new()
 {
+    IQueryable<T> Table { get; }
+    IQueryable<T> TableNoTracking { get; }
+
     Task<T?> GetByIdAsync(Guid id);
     Task<IEnumerable<T>> GetAllAsync();
 
@@ -15,21 +18,45 @@ public interface IBaseRepository<T> where T : IBaseEntity, new()
     Task DeleteAsync(Guid id);
 
     Task<bool> ExistsAsync(Guid id);
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+    Task<IQueryable<T>> FindAsync(Expression<Func<T, bool>> predicate);
     public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
     Task<int> CountAsync(Expression<Func<T, bool>> predicate);
 
     Task SaveChangesAsync();
+
+    /// <summary>
+    /// join some tables given
+    /// </summary>
+    /// <typeparam name="TJoin"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
+    /// <param name="joinSet"></param>
+    /// <param name="outerKey"></param>
+    /// <param name="innerKey"></param>
+    /// <param name="resultSelector"></param>
+    /// <returns></returns>
+    public IQueryable<TResult> JoinWith<TJoin, TKey, TResult>(
+        IQueryable<TJoin> joinSet,
+        Expression<Func<T, TKey>> outerKey,
+        Expression<Func<TJoin, TKey>> innerKey,
+        Expression<Func<T, TJoin, TResult>> resultSelector
+        ) where TJoin : class;
+
 }
 
 public class BaseRepository<TEntity> : IBaseRepository<TEntity>
     where TEntity : class, IBaseEntity, new()
 {
     private readonly Walletv2DbContext _context;
+    private readonly DbSet<TEntity> _entities;
+
     public BaseRepository(Walletv2DbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _entities = context.Set<TEntity>();
     }
+    public IQueryable<TEntity> Table => _entities.Where(e => !e.isDeleted);
+    public IQueryable<TEntity> TableNoTracking => _entities.AsNoTracking().Where(e => !e.isDeleted);
 
     public async Task<TEntity?> GetByIdAsync(Guid id)
     {
@@ -73,9 +100,9 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity>
         return await _context.Set<TEntity>().AnyAsync(e => e.Id == id && !e.isDeleted);
     }
 
-    public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
+    public async Task<IQueryable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
     {
-        return await Task.FromResult(_context.Set<TEntity>().Where(predicate).Where(e => !e.isDeleted).ToList());
+        return await Task.FromResult(_context.Set<TEntity>().Where(predicate).Where(e => !e.isDeleted));
     }
 
     public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
@@ -91,5 +118,23 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity>
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
+    }
+    /// <summary>
+    /// join some tables given
+    /// </summary>
+    /// <typeparam name="TJoin"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
+    /// <param name="joinSet"></param>
+    /// <param name="outerKey"></param>
+    /// <param name="innerKey"></param>
+    /// <param name="resultSelector"></param>
+    /// <returns></returns>
+    public IQueryable<TResult> JoinWith<TJoin, TKey, TResult>(IQueryable<TJoin> joinSet, 
+        Expression<Func<TEntity, TKey>> outerKey, 
+        Expression<Func<TJoin, TKey>> innerKey, 
+        Expression<Func<TEntity, TJoin, TResult>> resultSelector) where TJoin : class
+    {
+        return _entities.Join(joinSet, outerKey, innerKey, resultSelector);
     }
 }

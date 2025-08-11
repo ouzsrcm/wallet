@@ -99,7 +99,9 @@ public class AuthService : IAuthService
     /// <exception cref="InvalidOperationException"></exception>
     public async Task<UserLoginResponseDto> GenerateTokenByRefreshToken(string refreshToken)
     {
-        var lastToken = (await _refreshTokenRepository.FindAsync(x => x.Token == refreshToken && !x.IsRevoked && !x.IsUsed)).FirstOrDefault();
+        var lastToken = (await _refreshTokenRepository
+                .FindAsync(x => x.Token == refreshToken && !x.IsRevoked && !x.IsUsed))
+                .FirstOrDefault();
         if (lastToken is null)
             throw new InvalidOperationException("Invalid or expired refresh token.");
 
