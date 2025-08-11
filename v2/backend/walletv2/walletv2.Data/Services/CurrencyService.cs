@@ -21,6 +21,9 @@ public class CurrencyService : ICurrencyService
 
     private readonly ICurrencyProxy currencyProxy;
 
+    public static string DefaultCurrencyCode => "TRY";
+    public static string DefaultRateTypeName => "ForexBuying";
+
     public CurrencyService(IBaseRepository<Currency> _currencyRepository,
         IBaseRepository<ExchangeRate> _exchangeRateRepository,
         IBaseRepository<ExchangeRateType> _exchangeRateTypeRepository,

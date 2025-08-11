@@ -29,36 +29,36 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
     [AllowAnonymous]
-    public async Task<UserLoginResponse> Login([FromBody] UserLoginRequest param)
+    public async Task<IActionResult> Login([FromBody] UserLoginRequest param)
     {
         try
         {
 
-            await currencyService.UpdateDailyRates();
+            //await currencyService.UpdateDailyRates();
 
             var res = await _authService.Login(new UserLoginDto
             {
                 Username = param.Username ?? string.Empty,
                 Password = param.Password ?? string.Empty
             });
-            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
+            return Ok(new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
             {
                 Status = ApiResponseStatus.Success,
                 AccessToken = res.AccessToken,
                 RefreshToken = res.RefreshToken,
                 Expiration = res.Expiration
-            };
+            });
         }
         catch (Exception ex)
         {
-            return await Task.FromResult(new UserLoginResponse(string.Empty, string.Empty, default)
+            return BadRequest(await Task.FromResult(new UserLoginResponse(string.Empty, string.Empty, default)
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message,
                 Expiration = DateTime.MinValue,
                 AccessToken = string.Empty,
                 RefreshToken = string.Empty
-            });
+            }));
         }
     }
 
@@ -72,29 +72,29 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
     [AllowAnonymous]
-    public async Task<UserLoginResponse> RefreshToken([FromBody] RefreshTokenRequest param)
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest param)
     {
         try
         {
             var res = await _authService.GenerateTokenByRefreshToken(param.RefreshToken);
-            return new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
+            return Ok(new UserLoginResponse(res.AccessToken, res.RefreshToken, res.Expiration)
             {
                 Status = ApiResponseStatus.Success,
                 AccessToken = res.AccessToken,
                 RefreshToken = res.RefreshToken,
                 Expiration = res.Expiration
-            };
+            });
         }
         catch (Exception ex)
         {
-            return new UserLoginResponse(string.Empty, string.Empty, DateTime.MinValue)
+            return BadRequest(new UserLoginResponse(string.Empty, string.Empty, DateTime.MinValue)
             {
                 Status = ApiResponseStatus.Error,
                 Message = ex.Message,
                 Expiration = DateTime.MinValue,
                 AccessToken = string.Empty,
                 RefreshToken = string.Empty
-            };
+            });
         }
     }
 }
