@@ -8,6 +8,8 @@ public class DistributeCashflowDto
 
 public class DistributeCashflowItemDto
 {
+    public Guid? FromAccountId { get; set; }
+    public Guid? ToAccountId { get; set; }
     public Guid CashflowTypeId { get; set; }
     public Guid AccountId { get; set; }
     public decimal Credit { get; set; }

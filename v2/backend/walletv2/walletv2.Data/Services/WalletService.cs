@@ -1,4 +1,7 @@
-﻿using walletv2.Data.Entities.DataTransferObjects;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Security.Cryptography;
+using walletv2.Data.Entities.DataTransferObjects;
 using walletv2.Data.Entities.Objects;
 using walletv2.Data.Repositories;
 
@@ -148,20 +151,69 @@ public class WalletService : IWalletService
         if (model.Items == null || !model.Items.Any())
             throw new ArgumentException("Items cannot be null or empty.", nameof(model.Items));
 
+        var cfTypes = await _cashflowTypeRepository.FindAsync(x => !x.isDeleted);
+        if (cfTypes == null || !cfTypes.Any())
+            throw new InvalidOperationException("No cashflow types found.");
+
         foreach (var item in model.Items)
         {
-            if (await createCashflowAsync(new Cashflow
-            {
-                CashflowTypeId = item.CashflowTypeId,
-                UserId = model.UserId,
-                Credit = item.Credit,
-                Debit = item.Debit,
-                Description = item.Description,
-                CurrencyId = item.CurrencyId
-            }, saveInline: false) == null)
-                throw new InvalidOperationException("Failed to create cashflow.");
+            var itemCfType = await cfTypes.AnyAsync(x => x.Id == item.CashflowTypeId) ?
+                cfTypes.FirstOrDefault(x => x.Id == item.CashflowTypeId) :
+                null;
+
+            if (itemCfType == null)
+                throw new ArgumentException($"CashflowTypeId {item.CashflowTypeId} is invalid.", nameof(item.CashflowTypeId));
+
+            if (itemCfType.Name == "Income" && item.Credit < 0)
+                throw new ArgumentException("Credit cannot be negative for non-Transfer types.", nameof(item.Credit));
+
+            if (itemCfType.Name == "Expense" && item.Debit < 0)
+                throw new ArgumentException("Debit cannot be negative for non-Transfer types.", nameof(item.Debit));
+
+            if (itemCfType.Name == "Transfer")
+                await moneyTransfer(item.Credit, item.FromAccountId, item.ToAccountId);
+            else
+                await createCashflowAsync(new Cashflow
+                {
+                    CashflowTypeId = item.CashflowTypeId,
+                    UserId = model.UserId,
+                    Credit = item.Credit,
+                    Debit = item.Debit,
+                    Description = item.Description,
+                    CurrencyId = item.CurrencyId
+                }, saveInline: false);
         }
         await _cashflowRepository.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// money transfer operation between accounts.
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    private async Task moneyTransfer(decimal amount, Guid? fromAccount, Guid? toAccount)
+    {
+        if (amount < 0)
+            throw new ArgumentException("Amount cannot be negative.", nameof(amount));
+
+        if ((fromAccount is null || toAccount is null)
+            && (fromAccount == Guid.Empty || toAccount == Guid.Empty))
+            throw new ArgumentException("FromAccount and ToAccount cannot be empty while for money transfer operation.",
+                nameof(fromAccount));
+
+        var cf = _cashflowRepository.TableNoTracking;
+
+        cf = cf.Where(x => x.AccountId == fromAccount);
+        if (!cf.Any())
+            throw new ArgumentException("FromAccount does not exist or has no cashflows.", nameof(fromAccount));
+        
+        var actualAmount = amount;
+
+        foreach (var item in cf)
+        {
+            //TODO : under consideration, this is not the best way to do this.
+        }
     }
 
     /// <summary>
@@ -183,7 +235,7 @@ public class WalletService : IWalletService
         var document = await _cashflowDocumentRepository.AddAsync(new CashflowDocument
         {
             CashflowId = cashflow.Id,
-            DocumentNumber = Guid.NewGuid().ToString() // TODO: Generate a proper document number
+            DocumentNumber = new Random().Next(100000, 999999).ToString()
         });
         if (document == null)
             throw new InvalidOperationException("Failed to create cashflow document.");
@@ -218,6 +270,11 @@ public class WalletService : IWalletService
         {
             cashflow.DebitTRY = cashflow.Debit * rate.Rate;
             cashflow.CreditTRY = cashflow.Credit * rate.Rate;
+        }
+        else
+        {
+            cashflow.DebitTRY = cashflow.Debit;
+            cashflow.CreditTRY = cashflow.Credit;
         }
 
         var res = await _cashflowRepository.AddAsync(cashflow);
@@ -337,12 +394,15 @@ public class WalletService : IWalletService
         if (model.UserId == Guid.Empty)
             throw new ArgumentNullException(nameof(model.UserId));
 
+        if (model.StartDate.HasValue && model.EndDate.HasValue && model.StartDate > model.EndDate)
+            throw new InvalidOperationException("StartDate cannot be greater than EndDate.");
+
         var userRes = _userService.GetUserDetails(model.UserId);
         if (userRes == null)
             throw new ArgumentNullException(nameof(userRes));
         var user = await userRes;
 
-        if (await _cashflowRepository.AnyAsync(x => x.UserId == model.UserId && !x.isDeleted))
+        if (await _cashflowRepository.AnyAsync(x => x.UserId == user.Id && !x.isDeleted))
             throw new Exception("can't find cashflows for this user");
 
         var cf = _cashflowRepository.TableNoTracking;
@@ -350,33 +410,49 @@ public class WalletService : IWalletService
         var currency = _currencyRepository.TableNoTracking;
         var documents = _cashflowDocumentRepository.TableNoTracking;
 
-        var res = cf.Join(
-            cfType,
-            x => x.CashflowTypeId,
-            y => y.Id,
-            (x, y) => new CashflowDto()
-            {
-                CashflowId = x.Id,
-                UserId = x.UserId,
-                CashflowTypeId = x.CashflowTypeId,
-                CashflowTypeName = y.Name ?? string.Empty,
-                Description = x.Description ?? string.Empty,
-                Credit = x.Credit,
-                Debit = x.Debit,
-                CurrencyId = x.CurrencyId,
-                CurrencyRate = x.CurrencyRate,
-                CurrencyCode = currency.Where(currency => currency.Id == x.CurrencyId).FirstOrDefault().CurrencyCode ?? string.Empty,
-                CurrencyName = currency.Where(currency => currency.Id == x.CurrencyId).FirstOrDefault().CurrencyName ?? string.Empty,
-                CreditTRY = x.CreditTRY,
-                DebitTRY = x.DebitTRY,
-                DocumentNumber = documents.Where(doc => doc.CashflowId == x.Id).FirstOrDefault().DocumentNumber ?? string.Empty,
-                CreatedAt = x.createdAt
-            });
+        if (model.CashflowTypeId.HasValue && model.CashflowTypeId != Guid.Empty)
+            cf = cf.Where(x => x.CashflowTypeId == model.CashflowTypeId.Value);
+
+        if (model.StartDate.HasValue && model.EndDate.HasValue)
+            cf = cf.Where(x => x.createdAt >= model.StartDate.Value && x.createdAt <= model.EndDate.Value);
+        else
+        {
+            if (model.StartDate.HasValue)
+                cf = cf.Where(x => x.createdAt >= model.StartDate.Value);
+
+            if (model.EndDate.HasValue)
+                cf = cf.Where(x => x.createdAt <= model.EndDate.Value);
+        }
+
+        var res = from item in cf
+                  join type in cfType on item.CashflowTypeId equals type.Id
+                  join curr in currency on item.CurrencyId equals curr.Id
+                  join doc in documents on item.Id equals doc.CashflowId into docGroup
+                  from doc in docGroup.DefaultIfEmpty()
+                  where item.UserId == model.UserId && !item.isDeleted
+                  select new CashflowDto()
+                  {
+                      CashflowId = item.Id,
+                      UserId = item.UserId,
+                      CashflowTypeId = item.CashflowTypeId,
+                      CashflowTypeName = type.Name ?? string.Empty,
+                      Description = item.Description ?? string.Empty,
+                      Credit = item.Credit,
+                      Debit = item.Debit,
+                      CurrencyId = item.CurrencyId,
+                      CurrencyRate = item.CurrencyRate,
+                      CurrencyCode = curr.CurrencyCode ?? string.Empty,
+                      CurrencyName = curr.CurrencyName ?? string.Empty,
+                      CreditTRY = item.CreditTRY,
+                      DebitTRY = item.DebitTRY,
+                      DocumentNumber = doc.DocumentNumber ?? string.Empty,
+                      CreatedAt = item.createdAt
+                  };
 
         return new CashflowListDto()
         {
             UserId = model.UserId,
-            Items = null
+            Items = res
         };
     }
 }
