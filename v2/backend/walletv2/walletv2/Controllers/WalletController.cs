@@ -23,6 +23,10 @@ public class WalletController : ControllerBase
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("account")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CreateAccountResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CreateAccountResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
     {
         if (request == null)
@@ -63,6 +67,10 @@ public class WalletController : ControllerBase
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("income-expense")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CreateIncomeExpenseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CreateIncomeExpenseResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateIncomeExpense([FromBody] CreateIncomeExpenseRequest request)
     {
         if (request == null)
@@ -105,6 +113,10 @@ public class WalletController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet("income-expenses")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(IncomeExpenseListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IncomeExpenseListResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetIncomeExpenses()
     {
         try
@@ -140,6 +152,11 @@ public class WalletController : ControllerBase
     /// returns a list of income and expense types.
     /// </summary>
     /// <returns></returns>
+    [HttpGet("income-expense-types")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(IncomeExpenseTypeListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IncomeExpenseTypeListResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetIncomeExpenseTypes()
     {
         try
@@ -161,6 +178,62 @@ public class WalletController : ControllerBase
             {
                 Status = ApiResponseStatus.ServerError,
                 Message = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// list of the cashflow for the user.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [HttpPost("cashflows")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CashflowListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CashflowListResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetCashflows([FromBody] CashflowListRequest model)
+    {
+        try
+        {
+            var res = await _walletService.GetCashflowListAsync(new GetCashflowListDto()
+            {
+                EndDate = model.EndDate,
+                UserId = User.GetUserId(),
+                StartDate = model.StartDate,
+                CurrencyId = model.CurrencyId,
+                CashflowTypeId = model.CashflowTypeId,
+            });
+            return Ok(new CashflowListResponse
+            {
+                Status = ApiResponseStatus.Success,
+                Items = res.Items?.Select(x => new CashflowItemResponse()
+                {
+                    UserId = x.UserId,
+                    CashflowId = x.CashflowId,
+                    Credit = x.Credit,
+                    CreatedAt = x.CreatedAt,
+                    CashflowTypeId = x.CashflowTypeId,
+                    CurrencyId = x.CurrencyId,
+                    CurrencyCode = x.CurrencyCode,
+                    CashflowTypeName = x.CashflowTypeName,
+                    CurrencyName = x.CurrencyName,
+                    CreditTRY = x.CreditTRY,
+                    CurrencyRate = x.CurrencyRate,
+                    Debit = x.Debit,
+                    DebitTRY = x.DebitTRY,
+                    Description = x.Description,
+                    DocumentNumber = x.DocumentNumber,
+                    Status = ApiResponseStatus.Success
+                })
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new CashflowListResponse
+            {
+                Status = ApiResponseStatus.ServerError,
+                Message = $"An error occurred while fetching cashflows. {ex.Message}"
             });
         }
     }

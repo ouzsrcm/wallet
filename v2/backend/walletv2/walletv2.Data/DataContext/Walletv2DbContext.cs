@@ -60,14 +60,10 @@ public class Walletv2DbContextFactory : IDesignTimeDbContextFactory<Walletv2DbCo
 {
     public Walletv2DbContext CreateDbContext(string[] args)
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
         var optionsBuilder = new DbContextOptionsBuilder<Walletv2DbContext>();
 
-        var connectionString = configuration.GetConnectionString("Walletv2DbContext");
+        //var connectionString = configuration.GetConnectionString("Walletv2DbContext");
+        var connectionString = "Host=localhost;Port=5432;Database=walletdb;Username=postgres;Password=saricamou2";
         optionsBuilder.UseNpgsql(connectionString);
 
         return new Walletv2DbContext(optionsBuilder.Options);

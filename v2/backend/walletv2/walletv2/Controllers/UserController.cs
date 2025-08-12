@@ -24,6 +24,8 @@ public class UserController : ControllerBase
     /// <param name="param"></param>
     /// <returns></returns>
     [HttpPost("register")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status500InternalServerError)]
@@ -58,6 +60,8 @@ public class UserController : ControllerBase
     /// </summary>
     /// <returns>UserDetailResponseDto</returns>
     [HttpGet("profile")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserDetailResponseDto), StatusCodes.Status500InternalServerError)]

@@ -88,14 +88,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "WalletV2 API V1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
-    });
 }
+var subfolder = builder.Configuration["AppSubfolder"] ?? "walletv2";
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.RoutePrefix = "";
+    c.SwaggerEndpoint($"/{subfolder}/swagger/v1/swagger.json", "WalletV2 API V1");
+});
 
 app.UseHttpsRedirection();
 
@@ -104,7 +104,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-await DbSeeder.SeedAsync(app.Services);
+//await DbSeeder.SeedAsync(app.Services);
 
 app.Run();
 

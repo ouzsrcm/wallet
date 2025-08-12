@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace walletv2.Data.Entities.Objects;
 
@@ -27,6 +28,7 @@ public class Cashflow : BaseEntityImplementation
     public Guid CashflowTypeId { get; set; }
     [Required]
     public Guid UserId { get; set; }
+    public Guid AccountId { get; set; }
     [Required]
     public decimal Credit { get; set; }
     [Required]
@@ -37,10 +39,19 @@ public class Cashflow : BaseEntityImplementation
     public Guid? CashflowDocumentId { get; set; }
     public Guid? CurrencyId { get; set; }
     public decimal CurrencyRate { get; set; }
-    public virtual CashflowType? CashflowType { get; set; }
     public virtual User? User { get; set; }
-    public virtual CashflowDocument? CashflowDocument { get; set; }
+
+    [ForeignKey("AccountId")]
+    public virtual Account? Account { get; set; }
+
+    [ForeignKey("CurrencyId")]
     public virtual Currency? Currency { get; set; }
+
+    [ForeignKey("CashflowTypeId")]
+    public virtual CashflowType? CashflowType { get; set; }
+
+    [ForeignKey("CashflowDocumentId")]
+    public virtual CashflowDocument? CashflowDocument { get; set; }
 }
 
 /// <summary>
@@ -56,7 +67,11 @@ public class Account : BaseEntityImplementation
     public Guid CurrencyId { get; set; }
     [Required]
     public Guid UserId { get; set; }
+
+    [ForeignKey("UserId")]
     public virtual User? User { get; set; }
+
+    [ForeignKey("CurrencyId")]
     public virtual Currency? Currency { get; set; }
 }
 
@@ -79,6 +94,7 @@ public class IncomeExpenseType : BaseEntityImplementation
     [MinLength(3)]
     [MaxLength(100)]
     public string? Name { get; set; }
+
     [Required]
     [MinLength(10)]
     [MaxLength(1000)]
@@ -111,5 +127,9 @@ public class IncomeExpense : BaseEntityImplementation
     [MaxLength(1000)]
     public string Icon { get; set; } = string.Empty;
 
+    [ForeignKey("UserId")]
     public virtual User? User { get; set; }
+
+    [ForeignKey("IncomeExpenseTypeId")]
+    public virtual IncomeExpenseType? IncomeExpenseType { get; set; }
 }

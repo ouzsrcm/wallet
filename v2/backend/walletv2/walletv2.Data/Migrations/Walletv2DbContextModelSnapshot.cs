@@ -75,10 +75,10 @@ namespace walletv2.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CashflowDocumentId")
+                    b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CashflowDocumentId1")
+                    b.Property<Guid?>("CashflowDocumentId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CashflowTypeId")
@@ -131,7 +131,9 @@ namespace walletv2.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CashflowDocumentId1");
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("CashflowDocumentId");
 
                     b.HasIndex("CashflowTypeId");
 
@@ -411,6 +413,8 @@ namespace walletv2.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IncomeExpenseTypeId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("IncomeExpenses");
@@ -634,9 +638,15 @@ namespace walletv2.Data.Migrations
 
             modelBuilder.Entity("walletv2.Data.Entities.Objects.Cashflow", b =>
                 {
+                    b.HasOne("walletv2.Data.Entities.Objects.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("walletv2.Data.Entities.Objects.CashflowDocument", "CashflowDocument")
                         .WithMany()
-                        .HasForeignKey("CashflowDocumentId1");
+                        .HasForeignKey("CashflowDocumentId");
 
                     b.HasOne("walletv2.Data.Entities.Objects.CashflowType", "CashflowType")
                         .WithMany()
@@ -653,6 +663,8 @@ namespace walletv2.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
 
                     b.Navigation("CashflowDocument");
 
@@ -684,11 +696,19 @@ namespace walletv2.Data.Migrations
 
             modelBuilder.Entity("walletv2.Data.Entities.Objects.IncomeExpense", b =>
                 {
+                    b.HasOne("walletv2.Data.Entities.Objects.IncomeExpenseType", "IncomeExpenseType")
+                        .WithMany()
+                        .HasForeignKey("IncomeExpenseTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("walletv2.Data.Entities.Objects.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("IncomeExpenseType");
 
                     b.Navigation("User");
                 });

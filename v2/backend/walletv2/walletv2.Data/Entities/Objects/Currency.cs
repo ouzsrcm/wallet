@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace walletv2.Data.Entities.Objects;
 
@@ -37,6 +38,9 @@ public class ExchangeRate : BaseEntityImplementation
     public decimal Rate { get; set; }
     public DateTime RateDate { get; set; }
 
+    [ForeignKey("CurrencyId")]
     public virtual Currency? Currency { get; set; }
+
+    [ForeignKey("ExchangeRateTypeId")]
     public virtual ExchangeRateType? ExchangeRateType { get; set; }
 }

@@ -24,11 +24,13 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <param name="param"></param>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost("login")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
-    [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] UserLoginRequest param)
     {
         try
@@ -67,11 +69,13 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <param name="param"></param>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost("refresh-token")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(UserLoginResponse), StatusCodes.Status500InternalServerError)]
-    [AllowAnonymous]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest param)
     {
         try

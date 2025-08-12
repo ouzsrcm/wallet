@@ -1,4 +1,6 @@
-﻿namespace walletv2.Dtos;
+﻿using walletv2.Data.Entities.DataTransferObjects;
+
+namespace walletv2.Dtos;
 
 /// <summary>
 /// create account request DTO.
@@ -122,4 +124,38 @@ public class IncomeExpenseTypeResponse : BaseResponseDto
     public Guid IncomeExpenseTypeId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+}
+
+
+public class CashflowListRequest : BaseRequestDto
+{
+    public Guid? CurrencyId { get; set; }
+    public Guid? CashflowTypeId { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
+public class CashflowListResponse : BaseResponseDto
+{
+    public Guid UserId { get; set; }
+    public IEnumerable<CashflowItemResponse>? Items { get; set; }
+}
+
+public class CashflowItemResponse : BaseResponseDto
+{
+    public Guid CashflowId { get; set; }
+    public Guid UserId { get; set; }
+    public Guid? CurrencyId { get; set; }
+    public Guid CashflowTypeId { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string CurrencyCode { get; set; } = string.Empty;
+    public string CurrencyName { get; set; } = string.Empty;
+    public decimal CurrencyRate { get; set; }
+    public string? DocumentNumber { get; set; } = string.Empty;
+    public string CashflowTypeName { get; set; } = string.Empty;
+    public decimal Debit { get; set; }
+    public decimal Credit { get; set; }
+    public decimal DebitTRY { get; set; }
+    public decimal CreditTRY { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
