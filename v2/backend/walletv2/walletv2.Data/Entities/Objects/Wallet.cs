@@ -27,6 +27,7 @@ public class Cashflow : BaseEntityImplementation
     public Guid CashflowTypeId { get; set; }
     [Required]
     public Guid UserId { get; set; }
+    public Guid AccountId { get; set; }
     [Required]
     public decimal Credit { get; set; }
     [Required]
@@ -37,10 +38,11 @@ public class Cashflow : BaseEntityImplementation
     public Guid? CashflowDocumentId { get; set; }
     public Guid? CurrencyId { get; set; }
     public decimal CurrencyRate { get; set; }
-    public virtual CashflowType? CashflowType { get; set; }
     public virtual User? User { get; set; }
-    public virtual CashflowDocument? CashflowDocument { get; set; }
+    public virtual Account? Account { get; set; }
     public virtual Currency? Currency { get; set; }
+    public virtual CashflowType? CashflowType { get; set; }
+    public virtual CashflowDocument? CashflowDocument { get; set; }
 }
 
 /// <summary>
