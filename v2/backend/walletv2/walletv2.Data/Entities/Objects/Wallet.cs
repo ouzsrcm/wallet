@@ -49,8 +49,7 @@ public class Cashflow : BaseEntityImplementation
 
     [ForeignKey("CashflowTypeId")]
     public virtual CashflowType? CashflowType { get; set; }
-
-    [ForeignKey("CashflowDocumentId")]
+    public virtual User? User { get; set; }
     public virtual CashflowDocument? CashflowDocument { get; set; }
 }
 

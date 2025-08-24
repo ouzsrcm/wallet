@@ -131,7 +131,7 @@ namespace walletv2.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("CashflowDocumentId1");
 
                     b.HasIndex("CashflowDocumentId");
 
